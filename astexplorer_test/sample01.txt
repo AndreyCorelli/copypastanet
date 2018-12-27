@@ -16,8 +16,8 @@ def serialize(obj):
     return obj.__dict__
 
 
-def go_down_tree(ast):
-    x = 0
+def go_down_tree(ast, init_val):
+    x = init_val
     if ast.body is None:
         return
     x = x + serialize(x)

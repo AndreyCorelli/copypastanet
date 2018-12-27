@@ -67,7 +67,7 @@ def go_down_expression(node, child):
 
 def process_return(node, child):
     val_node = BriefNode(node.value.__class__.__name__)
-    child.body["_"] = val_node
+    child.body["_"] = [val_node]
     go_down_expression(node.value, val_node)
     return
 
@@ -95,7 +95,7 @@ def go_down_compare(node, child):
     # left
     left_node = BriefNode(node.left.__class__.__name__)
     go_down_expression(node.left, left_node)
-    child.body["left"] = left_node
+    child.body["left"] = [left_node]
 
     # ops
     if hasattr(node, 'ops'):
@@ -107,7 +107,7 @@ def go_down_compare(node, child):
         for cmp in node.comparators:
             cmp_child = BriefNode(cmp.__class__.__name__)
             go_down_expression(cmp, cmp_child)
-            child.body["cmp" + str(cp_index)] = cmp_child
+            child.body["cmp" + str(cp_index)] = [cmp_child]
     return
 
 
@@ -116,12 +116,12 @@ def go_down_bin_op(node, child):
     # left
     left_node = BriefNode(node.left.__class__.__name__)
     go_down_expression(node.left, left_node)
-    child.body["left"] = left_node
+    child.body["left"] = [left_node]
 
     # right
     right_node = BriefNode(node.right.__class__.__name__)
     go_down_expression(node.right, right_node)
-    child.body["right"] = right_node
+    child.body["right"] = [right_node]
     return
 
 
@@ -133,7 +133,7 @@ def go_down_assign_expression(node, child):
 
     # left side
     val_node = BriefNode(node.value.__class__.__name__)
-    child.body["_"] = val_node
+    child.body["_"] = [val_node]
     go_down_expression(node.value, val_node)
     return
 
