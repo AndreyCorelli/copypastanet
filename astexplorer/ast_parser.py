@@ -1,21 +1,4 @@
-import sys, re
-from datetime import date, time
-import json
-from pythonparser import source, lexer, diagnostic, parser, parse
 from astexplorer.brief_tree import *
-
-
-def serialize(obj):
-    if isinstance(obj, date):
-        serial = obj.isoformat()
-        return serial
-
-    if isinstance(obj, time):
-        serial = obj.isoformat()
-        return serial
-
-    return obj.__dict__
-
 
 def go_down_tree(ast):
     functions = []
@@ -187,14 +170,3 @@ def go_down_if_expression(node, child):
         go_down_expression(b_item, body_child)
     child.body["_"] = b_children
     return
-
-
-with open(sys.argv[1], 'r') as myfile:
-    data = myfile.read()
-
-
-ast = parse(data, sys.argv[1], "exec")
-tree = go_down_tree(ast)
-print(json.dumps(tree, default=serialize, sort_keys=False, indent=4))
-#print(ast.__class__.__name__)
-#print(str(ast))
