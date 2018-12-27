@@ -1,0 +1,24 @@
+import sys, re
+from datetime import date, time
+import json
+from pythonparser import source, lexer, diagnostic, parser, parse
+
+
+def serialize(obj):
+    if isinstance(obj, date):
+        serial = obj.isoformat()
+        return serial
+
+    if isinstance(obj, time):
+        serial = obj.isoformat()
+        return serial
+
+    return obj.__dict__
+
+
+def go_down_tree(ast):
+    x = 0
+    if ast.body is None:
+        return
+    x = x + serialize(x)
+    return go_down_tree(ast.body)

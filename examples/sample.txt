@@ -1,0 +1,9 @@
+import sys, re
+from pythonparser import source, lexer, diagnostic
+
+buf = None
+with open(sys.argv[1]) as f:
+    buf = source.Buffer(f.read(), "some_file.txt")
+
+engine   = diagnostic.Engine()
+rewriter = source.Rewriter(buf)
