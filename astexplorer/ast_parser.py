@@ -35,6 +35,9 @@ def go_down_expression(node, child):
     if node.__class__.__name__ == 'If':
         go_down_if_expression(node, child)
         return
+    if node.__class__.__name__ == 'For':
+        go_down_for_expression(node, child)
+        return
     if node.__class__.__name__ == 'Call':
         go_down_call_expression(node, child)
         return
@@ -60,6 +63,9 @@ def go_down_expression(node, child):
         return
     if node.__class__.__name__ == 'Attribute':
         process_attribute(node, child)
+        return
+    if node.__class__.__name__ == 'Tuple':
+        process_tuple(node, child)
         return
     if node.__class__.__name__ == 'List':
         process_list(node, child)
@@ -100,6 +106,14 @@ def process_attribute(node, child):
     if hasattr(node.value, 'id'):
         child.instance = node.value.id
     child.id = node.attr
+    return
+
+
+def process_tuple(node, child):
+    for elt in node.elts:
+        e_node = BriefNode(elt.__class__.__name__)
+        go_down_expression(elt, e_node)
+        child.arguments.append(e_node)
     return
 
 
@@ -227,6 +241,27 @@ def go_down_if_expression(node, child):
                 child.body['orelse'].append(else_child)
 
     # delve into body
+    b_children = []
+    for b_item in node.body:
+        body_child = BriefNode(b_item.__class__.__name__)
+        b_children.append(body_child)
+        go_down_expression(b_item, body_child)
+    child.body["_"] = b_children
+    return
+
+
+def go_down_for_expression(node, child):
+    # iterator
+    arg_child = BriefNode(node.target.__class__.__name__)
+    go_down_expression(node.target, arg_child)
+    child.arguments.append(arg_child)
+
+    # iterating object
+    for_val = BriefNode(node.iter.__class__.__name__)
+    go_down_expression(node.iter, for_val)
+    child.arguments.append(for_val)
+
+    # body
     b_children = []
     for b_item in node.body:
         body_child = BriefNode(b_item.__class__.__name__)

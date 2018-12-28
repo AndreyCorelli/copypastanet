@@ -5,5 +5,5 @@ def ifelsetest(y):
     elif y ** 3 < 1000:
         x /= 2
     else:
-        x = x + 100
+        x = x + 100.01
     return x - y

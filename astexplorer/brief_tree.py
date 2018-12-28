@@ -1,9 +1,9 @@
 class BriefNode:
-    compare_op_symbols = {'Lt': '<', 'Gt': '>'}
+    compare_op_symbols = {'Lt': '<', 'Gt': '>', 'Eq': '==', 'NotEq': '!=='}
 
     math_bin_op_symbols = {'Add': '+', 'Div': '/', 'Mult': '*', 'Sub': '-', 'Pow': '^'}
 
-    math_unr_op_symbols = {'USub': '-'}
+    math_unr_op_symbols = {'USub': '-', 'Not': 'not '}
 
     def __init__(self):
         self.operands = []
@@ -58,8 +58,17 @@ class BriefNode:
             if_case = self.stringify(node.arguments[0])
             return node.function + ' ' + if_case + ':'
 
+        if node.function == 'For':
+            iter_tg = self.stringify(node.arguments[0])
+            iter_vl = self.stringify(node.arguments[1])
+            return node.function + ' ' + iter_tg + ' in ' + iter_vl + ':'
+
         if node.function == 'Num':
             return node.id
+
+        if node.function == 'Tuple':
+            arg_list = ', '.join([self.stringify(a) for a in node.arguments])
+            return 'Tuple{' + arg_list + '}'
 
         if node.function == 'Return':
             return 'return ' + self.stringify(node.body['_'][0])
