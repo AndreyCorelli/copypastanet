@@ -41,8 +41,13 @@ def go_down_expression(node, child):
     if node.__class__.__name__ == 'Assign':
         go_down_assign_expression(node, child)
         return
+    if node.__class__.__name__ == 'AugAssign':
+        go_down_aug_assign_expression(node, child)
     if node.__class__.__name__ == 'BinOp':
         go_down_bin_op(node, child)
+        return
+    if node.__class__.__name__ == 'UnaryOp':
+        go_down_unary_op(node, child)
         return
     if node.__class__.__name__ == 'Compare':
         go_down_compare(node, child)
@@ -56,6 +61,9 @@ def go_down_expression(node, child):
     if node.__class__.__name__ == 'Attribute':
         process_attribute(node, child)
         return
+    if node.__class__.__name__ == 'List':
+        process_list(node, child)
+        return
     if node.__class__.__name__ == 'Return':
         process_return(node, child)
         return
@@ -68,7 +76,23 @@ def go_down_expression(node, child):
 def process_return(node, child):
     val_node = BriefNode(node.value.__class__.__name__)
     child.body["_"] = [val_node]
+
+    if node.value is None:
+        val_node.function = 'NameConstant'
+        val_node.id = 'None'
+        return
+
     go_down_expression(node.value, val_node)
+    return
+
+
+def process_list(node, child):
+    elts = []
+    for elt in node.elts:
+        e_node = BriefNode(elt.__class__.__name__)
+        go_down_expression(elt, e_node)
+        elts.append(e_node)
+    child.body["items"] = elts
     return
 
 
@@ -103,16 +127,27 @@ def go_down_compare(node, child):
 
     # comparators
     if hasattr(node, 'comparators'):
-        cp_index = 0
+        compars = []
         for cmp in node.comparators:
             cmp_child = BriefNode(cmp.__class__.__name__)
             go_down_expression(cmp, cmp_child)
-            child.body["cmp" + str(cp_index)] = [cmp_child]
+            compars.append(cmp_child)
+        child.body["comparators"] = compars
+    return
+
+
+def go_down_unary_op(node, child):
+    operand = BriefNode(node.operand.__class__.__name__)
+    go_down_expression(node.operand, operand)
+    child.body["_"] = [operand]
+
+    child.id = node.op.__class__.__name__
     return
 
 
 def go_down_bin_op(node, child):
     child.function = node.op.__class__.__name__
+    child.id = child.function
     # left
     left_node = BriefNode(node.left.__class__.__name__)
     go_down_expression(node.left, left_node)
@@ -135,6 +170,21 @@ def go_down_assign_expression(node, child):
     val_node = BriefNode(node.value.__class__.__name__)
     child.body["_"] = [val_node]
     go_down_expression(node.value, val_node)
+    return
+
+
+def go_down_aug_assign_expression(node, child):
+    # target
+    child.arguments.append(BriefNode(node.target.__class__.__name__))
+    go_down_expression(node.target, child.arguments[-1])
+
+    # value
+    val_node = BriefNode(node.value.__class__.__name__)
+    child.body["_"] = [val_node]
+    go_down_expression(node.value, val_node)
+
+    # op
+    child.id = node.op.__class__.__name__
     return
 
 
@@ -161,6 +211,13 @@ def go_down_if_expression(node, child):
     # delve into (test)
     child.arguments.append(BriefNode(node.test.__class__.__name__))
     go_down_expression(node.test, child.arguments[0])
+
+    if hasattr(node, 'orelse'):
+        child.body['orelse'] = []
+        for ore in node.orelse:
+            or_child = BriefNode('El' + ore.__class__.__name__)
+            go_down_expression(ore, or_child)
+            child.body['orelse'].append(or_child)
 
     # delve into body
     b_children = []

@@ -1,4 +1,10 @@
 class BriefNode:
+    compare_op_symbols = {'Lt': '<', 'Gt': '>'}
+
+    math_bin_op_symbols = {'Add': '+', 'Div': '/', 'Mult': '*', 'Sub': '-', 'Pow': '^'}
+
+    math_unr_op_symbols = {'USub': '-'}
+
     def __init__(self):
         self.operands = []
         self.function = ''
@@ -7,8 +13,68 @@ class BriefNode:
         self.function = function
         self.arguments = []
         self.body = {}
-        self.id = None
+        self.id = function
         self.instance = None
+
+    def __str__(self):
+        return self.stringify(self)
+
+    def stringify(self, node):
+        if node.function == 'Name':
+            if node.instance is not None:
+                return node.instance + '.' + node.id
+            return node.id
+
+        if node.function == 'NameConstant':
+            return node.id
+
+        if node.function == 'Attribute':
+            return node.instance + '.' + node.id
+
+        if node.function == 'Assign':
+            return self.stringify(node.arguments[0]) + '=' + self.stringify(node.body['_'][0])
+
+        # + - * / Pow
+        if node.function in BriefNode.math_bin_op_symbols:
+            smb = BriefNode.math_bin_op_symbols[node.function]
+            return self.stringify(node.body['left'][0]) + smb + self.stringify(node.body['right'][0])
+
+        if node.function == 'AugAssign':
+            smb = BriefNode.math_bin_op_symbols[node.id]
+            return self.stringify(node.arguments[0]) + smb + '=' + self.stringify(node.body['_'][0])
+
+        # unary op
+        if node.function == 'UnaryOp':
+            smb = BriefNode.math_unr_op_symbols[node.id]
+            return smb + self.stringify(node.body['_'][0])
+
+        # comparison
+        if node.function == 'Compare':
+            smb = BriefNode.compare_op_symbols[node.id]
+            cmp_str = ', '.join([self.stringify(c) for c in node.body['comparators']])
+            return self.stringify(node.body['left'][0]) + smb + cmp_str
+
+        if node.function == 'If' or node.function == 'ElIf':
+            if_case = self.stringify(node.arguments[0])
+            return node.function + ' ' + if_case + ':'
+
+        if node.function == 'Num':
+            return node.id
+
+        if node.function == 'Return':
+            return 'return ' + self.stringify(node.body['_'][0])
+
+        if node.function == 'Call':
+            inst_preffix = node.instance + '.' if node.instance is not None else ''
+            args_lst = []
+            for arg in node.arguments:
+                args_lst.append(self.stringify(arg))
+            return inst_preffix + node.id + '(' + ",".join(args_lst) + ')'
+
+        if node.id == node.function:
+            return node.id
+        inst_preffix = node.instance + '.' if node.instance is not None else ''
+        return node.function + ' ' + inst_preffix + node.id
 
 
 class FuncTree:
@@ -23,6 +89,24 @@ class FuncTree:
             args += p
             args += ';'
         return self.name + ' ' + args
+
+    def stringify(self):
+        title = str(self) + '\n'
+        for child in self.children:
+            title = self.stringify_node(child, title, 0)
+        return title
+
+    def stringify_node(self, node, str, indent):
+        pads = ' ' * (indent * 4)
+        str += pads
+        str += node.__str__()
+        str += '\n'
+        for arg in node.arguments:
+            str = self.stringify_node(arg, str, indent + 1)
+        for b_list in node.body.values():
+            for b_child in b_list:
+                str = self.stringify_node(b_child, str, indent + 1)
+        return str
 
     # make parameter names, e.g. (self, folder, mode) "minimized"
     # e.q. (self, #p1, #p2)

@@ -1,0 +1,6 @@
+def discrim(a, b, c):
+    d = b**2 - 4 * a * c
+    if d < 0:
+        return []
+    d = d ** (.5)
+    return [(-b + d) / 2 / a, (-b + d) / 2 / a]

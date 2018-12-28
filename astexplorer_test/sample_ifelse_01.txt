@@ -1,0 +1,9 @@
+def ifelsetest(y):
+    x = y + 1
+    if y ** 2 > pow(y, .5):
+        x *= 2
+    elif y ** 3 < 1000:
+        x /= 2
+    else:
+        x = x + 100
+    return x - y
