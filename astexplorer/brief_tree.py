@@ -54,7 +54,7 @@ class BriefNode:
             cmp_str = ', '.join([self.stringify(c) for c in node.body['comparators']])
             return self.stringify(node.body['left'][0]) + smb + cmp_str
 
-        if node.function == 'If' or node.function == 'ElIf':
+        if node.function == 'If' or node.function == 'Elif':
             if_case = self.stringify(node.arguments[0])
             return node.function + ' ' + if_case + ':'
 
@@ -84,11 +84,8 @@ class FuncTree:
         self.args = {}
 
     def __str__(self):
-        args = ''
-        for p in self.args:
-            args += p
-            args += ';'
-        return self.name + ' ' + args
+        args = ', '.join(self.args)
+        return 'def ' + self.name + '(' + args + '):'
 
     def stringify(self):
         title = str(self) + '\n'

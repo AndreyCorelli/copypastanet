@@ -215,9 +215,16 @@ def go_down_if_expression(node, child):
     if hasattr(node, 'orelse'):
         child.body['orelse'] = []
         for ore in node.orelse:
-            or_child = BriefNode('El' + ore.__class__.__name__)
-            go_down_expression(ore, or_child)
-            child.body['orelse'].append(or_child)
+            if ore.__class__.__name__ == 'If':
+                or_child = BriefNode('Elif')
+                go_down_expression(ore, or_child)
+                child.body['orelse'].append(or_child)
+            else:
+                else_child = BriefNode('Else')
+                else_body = BriefNode(ore.__class__.__name__)
+                go_down_expression(ore, else_body)
+                else_child.body["_"] = [else_body]
+                child.body['orelse'].append(else_child)
 
     # delve into body
     b_children = []
