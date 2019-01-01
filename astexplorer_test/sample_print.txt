@@ -1,0 +1,3 @@
+def print_test(tree):
+    print()
+    print(tree.stringify())

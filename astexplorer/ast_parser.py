@@ -9,6 +9,10 @@ def go_down_tree(ast):
 
 def go_down_body(node, functions):
     for item in node:
+        if item.__class__.__name__ == 'ClassDef':
+            if hasattr(item, 'body'):
+                go_down_body(item.body, functions)
+            continue
         if item.__class__.__name__ == 'FunctionDef':
             func = go_down_func(item)
             functions.append(func)
@@ -32,6 +36,11 @@ def go_down_func(node):
 
 
 def go_down_expression(node, child):
+    if node.__class__.__name__ == "Expr":
+        node = node.value
+        child.function = node.__class__.__name__
+        child.id = child.function
+
     if node.__class__.__name__ == 'If':
         go_down_if_expression(node, child)
         return
@@ -43,6 +52,9 @@ def go_down_expression(node, child):
         return
     if node.__class__.__name__ == 'Assign':
         go_down_assign_expression(node, child)
+        return
+    if node.__class__.__name__ == 'With':
+        process_with_op(node, child)
         return
     if node.__class__.__name__ == 'AugAssign':
         go_down_aug_assign_expression(node, child)
@@ -114,6 +126,30 @@ def process_tuple(node, child):
         e_node = BriefNode(elt.__class__.__name__)
         go_down_expression(elt, e_node)
         child.arguments.append(e_node)
+    return
+
+
+def process_with_op(node, child):
+    # with itself
+    child.body["opt_expr"] = []
+    child.body["opt_vars"] = []
+    for item in node.items:
+        if hasattr(item, 'optional_vars'):
+            var_name = BriefNode('Name')
+            var_name.id = item.optional_vars.id
+            child.body["opt_vars"].append(var_name)
+        expr_node = item.context_expr
+        expr_child = BriefNode(expr_node.__class__.__name__)
+        go_down_expression(expr_node, expr_child)
+        child.body["opt_expr"].append(expr_child)
+
+    # with body
+    b_children = []
+    for b_item in node.body:
+        body_child = BriefNode(b_item.__class__.__name__)
+        b_children.append(body_child)
+        go_down_expression(b_item, body_child)
+    child.body["_"] = b_children
     return
 
 

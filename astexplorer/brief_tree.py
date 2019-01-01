@@ -63,6 +63,13 @@ class BriefNode:
             iter_vl = self.stringify(node.arguments[1])
             return node.function + ' ' + iter_tg + ' in ' + iter_vl + ':'
 
+        if node.function == 'With':
+            expr = self.stringify(node.body["opt_expr"][0])
+            opt_vars = ', '.join([self.stringify(c) for c in node.body['opt_vars']])
+            if len(opt_vars) > 0:
+                opt_vars = " as " + opt_vars
+            return node.function + ' ' + expr + opt_vars + ':'
+
         if node.function == 'Num':
             return node.id
 
