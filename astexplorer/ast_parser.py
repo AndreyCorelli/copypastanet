@@ -70,6 +70,9 @@ def go_down_expression(node, child):
     if node.__class__.__name__ == 'Num':
         process_num_arg(node, child)
         return
+    if node.__class__.__name__ == 'Str':
+        process_str_arg(node, child)
+        return
     if node.__class__.__name__ == 'NameConstant':
         process_name_const(node, child)
         return
@@ -162,6 +165,11 @@ def process_name_const(node, child):
 def process_num_arg(node, child):
     if hasattr(node, 'n'):
         child.id = str(node.n)
+    return
+
+
+def process_str_arg(node, child):
+    child.id = node.s
     return
 
 

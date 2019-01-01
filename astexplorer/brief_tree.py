@@ -28,6 +28,9 @@ class BriefNode:
         if node.function == 'NameConstant':
             return node.id
 
+        if node.function == 'Str':
+            return "#str'" + node.id + "'"
+
         if node.function == 'Attribute':
             return node.instance + '.' + node.id
 
