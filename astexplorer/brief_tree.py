@@ -1,5 +1,5 @@
 class BriefNode:
-    compare_op_symbols = {'Lt': '<', 'Gt': '>', 'Eq': '==', 'NotEq': '!=='}
+    compare_op_symbols = {'Lt': '<', 'Gt': '>', 'Eq': '==', 'NotEq': '!==', 'In': 'in', 'NotIn': 'not in'}
 
     math_bin_op_symbols = {'Add': '+', 'Div': '/', 'Mult': '*', 'Sub': '-', 'Pow': '^'}
 
@@ -55,7 +55,7 @@ class BriefNode:
         if node.function == 'Compare':
             smb = BriefNode.compare_op_symbols[node.id]
             cmp_str = ', '.join([self.stringify(c) for c in node.body['comparators']])
-            return self.stringify(node.body['left'][0]) + smb + cmp_str
+            return self.stringify(node.body['left'][0]) + ' ' + smb + ' ' + cmp_str
 
         if node.function == 'If' or node.function == 'Elif':
             if_case = self.stringify(node.arguments[0])

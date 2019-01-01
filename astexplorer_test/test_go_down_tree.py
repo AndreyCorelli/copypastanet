@@ -9,7 +9,7 @@ import json
 class TestGoDownTree(TestCase):
 
     def test_go_down_tree01(self):
-        fname = 'test_go_down_tree.py'
+        fname = 'sample01.txt'
         with open(fname, 'r') as myfile:
             data = myfile.read()
 

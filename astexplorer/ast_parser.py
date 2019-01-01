@@ -85,6 +85,9 @@ def go_down_expression(node, child):
     if node.__class__.__name__ == 'List':
         process_list(node, child)
         return
+    if node.__class__.__name__ == 'Raise':
+        process_raise(node, child)
+        return
     if node.__class__.__name__ == 'Return':
         process_return(node, child)
         return
@@ -116,6 +119,12 @@ def process_list(node, child):
     child.body["items"] = elts
     return
 
+
+def process_raise(node, child):
+    exc_child = BriefNode(node.exc.__class__.__name__)
+    go_down_expression(node.exc, exc_child)
+    child.body["_"] = [exc_child]
+    return
 
 def process_attribute(node, child):
     if hasattr(node.value, 'id'):
