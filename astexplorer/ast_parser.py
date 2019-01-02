@@ -47,6 +47,9 @@ def go_down_expression(node, child):
     if node.__class__.__name__ == 'For':
         go_down_for_expression(node, child)
         return
+    if node.__class__.__name__ == 'While':
+        go_down_while_expression(node, child)
+        return
     if node.__class__.__name__ == 'Call':
         go_down_call_expression(node, child)
         return
@@ -353,10 +356,25 @@ def go_down_for_expression(node, child):
     child.arguments.append(for_val)
 
     # body
+    child.body["_"] = get_node_body_list(node.body)
+    return
+
+
+def go_down_while_expression(node, child):
+    # test expr
+    test_node = BriefNode(node.test.__class__.__name__)
+    go_down_expression(node.test, test_node)
+    child.body["test"] = [test_node]
+
+    # body
+    child.body["_"] = get_node_body_list(node.body)
+    return
+
+
+def get_node_body_list(node_body):
     b_children = []
-    for b_item in node.body:
+    for b_item in node_body:
         body_child = BriefNode(b_item.__class__.__name__)
         b_children.append(body_child)
         go_down_expression(b_item, body_child)
-    child.body["_"] = b_children
-    return
+    return b_children

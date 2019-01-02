@@ -1,5 +1,6 @@
 class BriefNode:
-    compare_op_symbols = {'Lt': '<', 'Gt': '>', 'Eq': '==', 'NotEq': '!==', 'In': 'in', 'NotIn': 'not in', 'Is': 'is'}
+    compare_op_symbols = {'Lt': '<', 'Gt': '>', 'Eq': '==', 'NotEq': '!==',
+                          'In': 'in', 'NotIn': 'not in', 'Is': 'is', 'IsNot': 'is not'}
 
     math_bin_op_symbols = {'Add': '+', 'Div': '/', 'Mult': '*', 'Sub': '-', 'Pow': '^', 'Mod': '%'}
 
@@ -65,6 +66,10 @@ class BriefNode:
             iter_tg = self.stringify(node.arguments[0])
             iter_vl = self.stringify(node.arguments[1])
             return node.function + ' ' + iter_tg + ' in ' + iter_vl + ':'
+
+        if node.function == 'While':
+            test_node = self.stringify(node.body["_"][0])
+            return node.function + ' ' + test_node + ':'
 
         if node.function == 'With':
             expr = self.stringify(node.body["opt_expr"][0])
