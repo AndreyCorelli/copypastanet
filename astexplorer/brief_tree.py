@@ -1,7 +1,7 @@
 class BriefNode:
-    compare_op_symbols = {'Lt': '<', 'Gt': '>', 'Eq': '==', 'NotEq': '!==', 'In': 'in', 'NotIn': 'not in'}
+    compare_op_symbols = {'Lt': '<', 'Gt': '>', 'Eq': '==', 'NotEq': '!==', 'In': 'in', 'NotIn': 'not in', 'Is': 'is'}
 
-    math_bin_op_symbols = {'Add': '+', 'Div': '/', 'Mult': '*', 'Sub': '-', 'Pow': '^'}
+    math_bin_op_symbols = {'Add': '+', 'Div': '/', 'Mult': '*', 'Sub': '-', 'Pow': '^', 'Mod': '%'}
 
     math_unr_op_symbols = {'USub': '-', 'Not': 'not '}
 
@@ -80,8 +80,16 @@ class BriefNode:
             arg_list = ', '.join([self.stringify(a) for a in node.arguments])
             return 'Tuple{' + arg_list + '}'
 
+        if node.function == 'List':
+            arg_list = ', '.join([self.stringify(a) for a in node.body["items"]])
+            return '#List[' + arg_list + ']'
+
         if node.function == 'Return':
             return 'return ' + self.stringify(node.body['_'][0])
+
+        if node.function == 'Lambda':
+            arg_list = ', '.join([self.stringify(a) for a in node.arguments])
+            return arg_list + ' => {}'
 
         if node.function == 'Call':
             inst_preffix = node.instance + '.' if node.instance is not None else ''
@@ -89,6 +97,10 @@ class BriefNode:
             for arg in node.arguments:
                 args_lst.append(self.stringify(arg))
             return inst_preffix + node.id + '(' + ",".join(args_lst) + ')'
+
+        if node.function == 'Raise':
+            s_body = self.stringify(node.body['_'][0]) if '_' in node.body else ''
+            return 'raise ' + s_body
 
         if node.id == node.function:
             return node.id

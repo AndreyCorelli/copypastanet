@@ -50,6 +50,9 @@ def go_down_expression(node, child):
     if node.__class__.__name__ == 'Call':
         go_down_call_expression(node, child)
         return
+    if node.__class__.__name__ == 'Lambda':
+        go_down_lambda_expression(node, child)
+        return
     if node.__class__.__name__ == 'Assign':
         go_down_assign_expression(node, child)
         return
@@ -127,10 +130,27 @@ def process_raise(node, child):
     return
 
 def process_attribute(node, child):
+    # name in buffer.name
+    child.id = node.attr
+
+    # buffer in buffer.name
     if hasattr(node.value, 'id'):
         child.instance = node.value.id
-    child.id = node.attr
+    else:
+        attr = BriefNode(node.value.__class__.__name__)
+        go_down_expression(node.value, attr)
+        child.arguments.append(attr)
+        s = []
+        child.instance = '.'.join(unwind_attribute_chain(child, s))
     return
+
+
+def unwind_attribute_chain(c, s):
+    if len(c.arguments) == 0:
+        s.append(str(c))
+        return s
+    s.append(str(c.arguments[0]))
+    return s
 
 
 def process_tuple(node, child):
@@ -257,7 +277,11 @@ def go_down_aug_assign_expression(node, child):
 
 def go_down_call_expression(node, child):
     # delve into args
-    for arg in node.args:
+    args = node.args
+    if hasattr(node, 'kwargs'):
+        if node.kwargs is not None:
+            args.append(node.kwargs)
+    for arg in args:
         child.arguments.append(BriefNode(arg.__class__.__name__))
         go_down_expression(arg, child.arguments[-1])
 
@@ -271,6 +295,20 @@ def go_down_call_expression(node, child):
     if hasattr(node.func, 'value'):
         if hasattr(node.func.value, 'id'):
             child.instance = node.func.value.id
+    return
+
+
+def go_down_lambda_expression(node, child):
+    # args
+    for arg in node.args.args:
+        a_child = BriefNode(arg.__class__.__name__)
+        a_child.id = 'arg'
+        child.arguments.append(a_child)
+
+    # body
+    b_child = BriefNode(node.body.__class__.__name__)
+    go_down_expression(node.body, b_child)
+    child.body["_"] = [b_child]
     return
 
 

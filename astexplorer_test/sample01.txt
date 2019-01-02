@@ -1,3 +1,9 @@
-def init(lvls):
-    if level not in lvls:
-        raise ValueError("level must be one of Diagnostic.LEVELS")
+from __future__ import absolute_import, division, print_function, unicode_literals
+from functools import reduce
+from contextlib import contextmanager
+import sys, re
+
+class Diagnostic:
+    def render(self, only_line=False, colored=False):
+        thistuple = (self.location.source_buffer.name, self.location.line())
+
