@@ -9,8 +9,8 @@ import json
 class TestGoDownTree(TestCase):
 
     def test_go_down_tree01(self):
-        #fname = '../pythonparser/diagnostic.py'
-        fname = 'sample01.txt'
+        fname = '../astexplorer/ast_parser.py'
+        #fname = 'sample01.txt'
         with open(fname, 'r') as myfile:
             data = myfile.read()
 
@@ -18,8 +18,8 @@ class TestGoDownTree(TestCase):
         tree = go_down_tree(ast)
         #print(json.dumps(tree, default=serialize, sort_keys=False, indent=4))
         #self.assertEquals(2, len(tree))
-
         for fun in tree:
+            fun.weight_tree()
             print(fun.stringify())
             print()
 

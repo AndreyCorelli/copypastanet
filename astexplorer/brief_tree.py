@@ -9,6 +9,7 @@ class BriefNode:
     def __init__(self):
         self.operands = []
         self.function = ''
+        self.weight = 0
 
     def __init__(self, function):
         self.function = function
@@ -16,11 +17,18 @@ class BriefNode:
         self.body = {}
         self.id = function
         self.instance = None
+        self.weight = 0
 
     def __str__(self):
         return self.stringify(self)
 
     def stringify(self, node):
+        s = self.stringify_expression(node)
+        if node.weight > 0:
+            s += (' [' + str(node.weight) + ']')
+        return s
+
+    def stringify_expression(self, node):
         if node.function == 'Name':
             if node.instance is not None:
                 return node.instance + '.' + node.id
@@ -114,6 +122,8 @@ class BriefNode:
 
 
 class FuncTree:
+    default_node_weight = 10
+
     def __init__(self, name):
         self.children = []
         self.name = name
@@ -140,6 +150,25 @@ class FuncTree:
             for b_child in b_list:
                 str = self.stringify_node(b_child, str, indent + 1)
         return str
+
+    # give weight to each node, recursively
+    def weight_tree(self):
+        for child in self.children:
+            self.weight_sub_tree(child)
+
+    def weight_sub_tree(self, child):
+        child.weight = FuncTree.default_node_weight
+        # sum body weights
+        for key in child.body:
+            for sub in child.body[key]:
+                child.weight += self.weight_sub_tree(sub)
+        # sum arguments
+        for arg in child.arguments:
+            arg_weight = self.weight_sub_tree(arg)
+            if arg_weight > FuncTree.default_node_weight:
+                arg_weight -= FuncTree.default_node_weight
+            child.weight += arg_weight
+        return child.weight
 
     # make parameter names, e.g. (self, folder, mode) "minimized"
     # e.q. (self, #p1, #p2)

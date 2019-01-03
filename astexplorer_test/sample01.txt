@@ -127,3 +127,52 @@ class Diagnostic:
                 source_line,
                 highlight_line.decode("utf-8")
             ] + rendered_notes
+
+
+class Error(Exception):
+    """
+    :class:`Error` is an exception which carries a :class:`Diagnostic`.
+
+    :ivar diagnostic: (:class:`Diagnostic`) the diagnostic
+    """
+    def __init__(self, diagnostic):
+        self.diagnostic = diagnostic
+
+    def __str__(self):
+        return "\n".join(self.diagnostic.render())
+
+class Engine:
+    """
+    :class:`Engine` is a single point through which diagnostics from
+    lexer, parser and any AST consumer are dispatched.
+
+    :ivar all_errors_are_fatal: if true, an exception is raised not only
+        for ``fatal`` diagnostic level, but also ``error``
+    """
+    def __init__(self, all_errors_are_fatal=False):
+        self.all_errors_are_fatal = all_errors_are_fatal
+        self._appended_notes = []
+
+    def process(self, diagnostic):
+        """
+        The default implementation of :meth:`process` renders non-fatal
+        diagnostics to ``sys.stderr``, and raises fatal ones as a :class:`Error`.
+        """
+        diagnostic.notes += self._appended_notes
+        self.render_diagnostic(diagnostic)
+        if diagnostic.level == "fatal" or \
+                (self.all_errors_are_fatal and diagnostic.level == "error"):
+            raise Error(diagnostic)
+
+    @contextmanager
+    def context(self, *notes):
+        """
+        A context manager that appends ``note`` to every diagnostic processed by
+        this engine.
+        """
+        self._appended_notes += notes
+        yield
+        del self._appended_notes[-len(notes):]
+
+    def render_diagnostic(self, diagnostic):
+        sys.stderr.write("\n".join(diagnostic.render()) + "\n")
