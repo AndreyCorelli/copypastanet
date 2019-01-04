@@ -6,6 +6,7 @@ class Copypaste:
         self.node_b = node_b
         self.count = 1
         self.weight = node_a.weight
+        self.src_line = ''
 
     def update(self, node_a):
         self.count += 1

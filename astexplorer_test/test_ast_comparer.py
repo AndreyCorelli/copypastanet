@@ -4,6 +4,11 @@ from astexplorer.ast_parser import *
 from astexplorer.ast_comparer import *
 from pythonparser import parse
 
+def read_file_line_by_line(file_path):
+    with open(file_path) as f:
+        return f.readlines()
+
+
 class TestAstComparer(TestCase):
 
     def test_find_dups_in_parser(self):
@@ -18,6 +23,7 @@ class TestAstComparer(TestCase):
         cmp = AstComparer()
         cmp.compare_pre_process_functions(functions)
         cps = cmp.find_copypastes(functions)
+        cmp.read_src_lines(read_file_line_by_line)
 
         for c in cps:
             print(c)

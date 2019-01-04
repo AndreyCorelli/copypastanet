@@ -27,8 +27,8 @@ class BriefNode:
         self.depth = 0
         self.hash = ''
         if loc is not None:
-            self.line_start = loc.begin
-            self.line_end = loc.end
+            self.line_start = loc.begin_pos
+            self.line_end = loc.end_pos
         else:
             self.line_start = 0
             self.line_end = 0

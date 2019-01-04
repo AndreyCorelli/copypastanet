@@ -35,6 +35,8 @@ class AstComparer:
                 continue
             cpy = Copypaste(fa, fb, a_list[cp.start_a], b_list[cp.start_b])
             cpy.count = cp.count
+            for i in range(cp.start_a + 1, cp.start_a + cp.count):
+                cpy.weight += a_list[i].weight
             self.copypastes.append(cpy)
 
         # go down
@@ -54,4 +56,32 @@ class AstComparer:
         return
 
     def sort_copypastes(self):
-        self.copypastes.sort(key=lambda x: x.count, reverse=True)
+        self.copypastes.sort(key=lambda x: x.count * 100 + x.weight, reverse=True)
+
+    def read_src_lines(self, read_file_by_path):
+
+        # group copy-pastes by file names
+        cp_by_file = {}
+        for item in self.copypastes:
+            cp_by_file.setdefault(item.func_a.file, []).append(item)
+
+        for file in cp_by_file:
+            # order by position within the file
+            cp_by_file[file].sort(key=lambda x: x.node_a.line_start)
+
+            # read file as string
+            file_lines = read_file_by_path(file)
+            start = 0
+            for line in file_lines:
+                end = start + len(line)
+                line = line.strip()
+
+                while len(cp_by_file[file]) > 0:
+                    cp = cp_by_file[file][0]
+                    if cp.node_a.line_start > end:
+                        break
+                    cp.src_line = line
+                    cp_by_file[file].pop(0)
+                start = end
+                if len(cp_by_file[file]) == 0:
+                    break
