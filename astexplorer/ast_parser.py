@@ -192,7 +192,7 @@ def process_with_op(node, child):
         body_child = BriefNode(b_item.__class__.__name__, b_item.loc)
         b_children.append(body_child)
         go_down_expression(b_item, body_child)
-    child.body["_"] = b_children
+    child.body[""] = b_children
     return
 
 
@@ -319,7 +319,7 @@ def go_down_lambda_expression(node, child):
     # body
     b_child = BriefNode(node.body.__class__.__name__, node.body.loc)
     go_down_expression(node.body, b_child)
-    child.body["_"] = [b_child]
+    child.body[""] = [b_child]
     return
 
 
@@ -339,7 +339,7 @@ def go_down_if_expression(node, child):
                 else_child = BriefNode('Else')
                 else_body = BriefNode(ore.__class__.__name__, ore.loc)
                 go_down_expression(ore, else_body)
-                else_child.body["_"] = [else_body]
+                else_child.body[""] = [else_body]
                 child.body['orelse'].append(else_child)
 
     # delve into body
@@ -348,7 +348,7 @@ def go_down_if_expression(node, child):
         body_child = BriefNode(b_item.__class__.__name__, b_item.loc)
         b_children.append(body_child)
         go_down_expression(b_item, body_child)
-    child.body["_"] = b_children
+    child.body[""] = b_children
     return
 
 
@@ -364,7 +364,7 @@ def go_down_for_expression(node, child):
     child.arguments.append(for_val)
 
     # body
-    child.body["_"] = get_node_body_list(node.body)
+    child.body[""] = get_node_body_list(node.body)
     return
 
 

@@ -5,7 +5,6 @@ from astexplorer.ast_parser import *
 from pythonparser import parse
 import json
 
-
 class TestGoDownTree(TestCase):
 
     def test_go_down_tree01(self):

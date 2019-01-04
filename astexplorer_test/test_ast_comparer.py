@@ -13,7 +13,7 @@ class TestAstComparer(TestCase):
         ast = parse(data, fname, "exec")
         functions = go_down_tree(ast)
         for f in functions:
-            f.file = ''
+            f.file = fname
 
         cmp = AstComparer()
         cmp.compare_pre_process_functions(functions)
@@ -21,6 +21,7 @@ class TestAstComparer(TestCase):
 
         for c in cps:
             print(c)
+            print()
 
 
 if __name__ == '__main__':

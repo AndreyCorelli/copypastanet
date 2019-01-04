@@ -36,6 +36,18 @@ class BriefNode:
     def __str__(self):
         return self.stringify(self)
 
+    def stringify_subtree(self, str, indent):
+        pads = ' ' * (indent * 4)
+        str += pads
+        str += self.__str__()
+        str += '\n'
+        for arg in self.arguments:
+            str = arg.stringify_subtree(str, indent + 1)
+        for b_list in self.body.values():
+            for b_child in b_list:
+                str = b_child.stringify_subtree(str, indent + 1)
+        return str
+
     def stringify(self, node):
         s = self.stringify_expression(node)
         if node.depth > 0:
@@ -90,7 +102,7 @@ class BriefNode:
             return node.function + ' ' + iter_tg + ' in ' + iter_vl + ':'
 
         if node.function == 'While':
-            test_node = self.stringify(node.body["_"][0])
+            test_node = self.stringify(node.body[""][0])
             return node.function + ' ' + test_node + ':'
 
         if node.function == 'With':
@@ -153,20 +165,8 @@ class FuncTree:
     def stringify(self):
         title = str(self) + '\n'
         for child in self.children:
-            title = self.stringify_node(child, title, 0)
+            title = child.stringify_subtree(title, 0)
         return title
-
-    def stringify_node(self, node, str, indent):
-        pads = ' ' * (indent * 4)
-        str += pads
-        str += node.__str__()
-        str += '\n'
-        for arg in node.arguments:
-            str = self.stringify_node(arg, str, indent + 1)
-        for b_list in node.body.values():
-            for b_child in b_list:
-                str = self.stringify_node(b_child, str, indent + 1)
-        return str
 
     def calc_hashes(self):
         hash_calc = hashlib.md5()

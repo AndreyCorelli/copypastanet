@@ -1,4 +1,5 @@
 from astexplorer.copypaste import *
+from astexplorer.utils import *
 
 class AstComparer:
 
@@ -19,40 +20,38 @@ class AstComparer:
                 fb = functions[j]
                 self.find_func_copypastes(fa, fb)
                 j = j + 1
+        self.sort_copypastes()
         return self.copypastes
 
     def find_func_copypastes(self, fa, fb):
         self.find_node_copypastes(fa, fb, fa.children, fb.children)
 
     def find_node_copypastes(self, fa, fb, a_list, b_list):
-        cp_list = []
-        cp = None
+
+        # find copypastes on the current level
+        cp_list = find_sub_sequences(a_list, b_list, lambda x, y: x.hash == y.hash)
+        for cp in cp_list:
+            if cp.count < 2:
+                continue
+            cpy = Copypaste(fa, fb, a_list[cp.start_a], b_list[cp.start_b])
+            cpy.count = cp.count
+            self.copypastes.append(cpy)
+
+        # go down
         for a in a_list:
             for b in b_list:
-                if a.hash == b.hash:
-                    if cp is None:
-                        cp = Copypaste(fa, fb, a, b)
-                        cp_list.append(cp)
-                    else: # cp is not None
-                        cp.update(a)
-                else: # if a.hash != b.hash:
-                    cp = None
                 # delve into B children
                 if b.depth >= a.depth:
-                    for bkey in b.body:
-                        if len(b.body[bkey]) == 0:
+                    if "" in b.body:
+                        if len(b.body[""]) == 0:
                             continue
-                        self.find_node_copypastes(fa, fb, a_list, b.body[bkey])
+                        self.find_node_copypastes(fa, fb, a_list, b.body[""])
             # delve into A children
-            for akey in a.body:
-                if len(a.body[akey]) == 0:
+            if "" in a.body:
+                if len(a.body[""]) == 0:
                     continue
-                self.find_node_copypastes(fa, fb, a.body[akey], b_list)
-
-        # leave copypastes of 2+ items with min_cp_weight
-        for cp in cp_list:
-            if cp.count < 2 or cp.weight < self.min_cp_weight:
-                continue
-            self.copypastes.append(cp)
-
+                self.find_node_copypastes(fa, fb, a.body[""], b_list)
         return
+
+    def sort_copypastes(self):
+        self.copypastes.sort(key=lambda x: x.count, reverse=True)
