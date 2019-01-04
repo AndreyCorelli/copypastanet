@@ -10,22 +10,34 @@ class BriefNode:
         self.operands = []
         self.function = ''
         self.weight = 0
+        self.depth = 0
+        self.line_start = 0
+        self.line_end = 0
+        self.hash = ''
 
-    def __init__(self, function):
+    def __init__(self, function, loc=None):
         self.function = function
         self.arguments = []
         self.body = {}
         self.id = function
         self.instance = None
         self.weight = 0
+        self.depth = 0
+        self.hash = ''
+        if loc is not None:
+            self.line_start = loc.begin
+            self.line_end = loc.end
+        else:
+            self.line_start = 0
+            self.line_end = 0
 
     def __str__(self):
         return self.stringify(self)
 
     def stringify(self, node):
         s = self.stringify_expression(node)
-        if node.weight > 0:
-            s += (' [' + str(node.weight) + ']')
+        if node.depth > 0:
+            s += (' [' + str(node.depth) + ']')
         return s
 
     def stringify_expression(self, node):
@@ -124,7 +136,10 @@ class BriefNode:
 class FuncTree:
     default_node_weight = 10
 
+    weight_by_function = {'Attribute': 1, 'Name': 1, 'Num': 1, 'NameConstant': 1, 'Str': 1, 'Tuple': 5}
+
     def __init__(self, name):
+        self.file = ''
         self.children = []
         self.name = name
         self.args = {}
@@ -151,24 +166,48 @@ class FuncTree:
                 str = self.stringify_node(b_child, str, indent + 1)
         return str
 
+    def calc_hashes(self):
+        for child in self.children:
+            self.calc_hash(child)
+
+    def calc_hash(self, child):
+        hash_src = str(child)
+        # plus body items
+        for key in child.body:
+            for sub in child.body[key]:
+                hash_src += self.calc_hash(sub)
+        # plus arguments
+        for arg in child.arguments:
+            hash_src += self.calc_hash(arg)
+        return hash_src
+
     # give weight to each node, recursively
     def weight_tree(self):
         for child in self.children:
-            self.weight_sub_tree(child)
+            self.weight_sub_tree(child, 1)
 
-    def weight_sub_tree(self, child):
+    def weight_sub_tree(self, child, depth):
+        max_depth = depth
         child.weight = FuncTree.default_node_weight
+        if child.function in FuncTree.weight_by_function:
+            child.weight = FuncTree.weight_by_function[child.function]
+
         # sum body weights
         for key in child.body:
             for sub in child.body[key]:
-                child.weight += self.weight_sub_tree(sub)
+                wd = self.weight_sub_tree(sub, 0)
+                max_depth = max(max_depth, wd[1])
+                child.weight += wd[0]
         # sum arguments
         for arg in child.arguments:
-            arg_weight = self.weight_sub_tree(arg)
-            if arg_weight > FuncTree.default_node_weight:
-                arg_weight -= FuncTree.default_node_weight
-            child.weight += arg_weight
-        return child.weight
+            arg_weight = self.weight_sub_tree(arg, 0)
+            max_depth = max(max_depth, arg_weight[1])
+            if arg_weight[0] > FuncTree.default_node_weight:
+                arg_weight[0] -= FuncTree.default_node_weight
+            child.weight += arg_weight[0]
+
+        child.depth = max_depth
+        return [child.weight, max_depth + 1]
 
     # make parameter names, e.g. (self, folder, mode) "minimized"
     # e.q. (self, #p1, #p2)

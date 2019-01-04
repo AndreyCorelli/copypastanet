@@ -20,6 +20,7 @@ class TestGoDownTree(TestCase):
         #self.assertEquals(2, len(tree))
         for fun in tree:
             fun.weight_tree()
+            fun.calc_hashes()
             print(fun.stringify())
             print()
 
