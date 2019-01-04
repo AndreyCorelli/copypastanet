@@ -1,3 +1,5 @@
+import hashlib
+
 class BriefNode:
     compare_op_symbols = {'Lt': '<', 'Gt': '>', 'Eq': '==', 'NotEq': '!==',
                           'In': 'in', 'NotIn': 'not in', 'Is': 'is', 'IsNot': 'is not'}
@@ -167,19 +169,22 @@ class FuncTree:
         return str
 
     def calc_hashes(self):
+        hash_calc = hashlib.md5()
         for child in self.children:
-            self.calc_hash(child)
+            self.calc_hash(child, hash_calc)
 
-    def calc_hash(self, child):
+    def calc_hash(self, child, hash_calc):
         hash_src = str(child)
         # plus body items
         for key in child.body:
             for sub in child.body[key]:
-                hash_src += self.calc_hash(sub)
+                hash_src += self.calc_hash(sub, hash_calc)
         # plus arguments
         for arg in child.arguments:
-            hash_src += self.calc_hash(arg)
-        return hash_src
+            hash_src += self.calc_hash(arg, hash_calc)
+
+        child.hash = hashlib.md5(hash_src.encode('utf-8')).hexdigest()
+        return child.hash
 
     # give weight to each node, recursively
     def weight_tree(self):

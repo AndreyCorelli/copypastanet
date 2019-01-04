@@ -38,10 +38,11 @@ class AstComparer:
                 else: # if a.hash != b.hash:
                     cp = None
                 # delve into B children
-                for bkey in b.body:
-                    if len(b.body[bkey]) == 0:
-                        continue
-                    self.find_node_copypastes(fa, fb, a_list, b.body[bkey])
+                if b.depth >= a.depth:
+                    for bkey in b.body:
+                        if len(b.body[bkey]) == 0:
+                            continue
+                        self.find_node_copypastes(fa, fb, a_list, b.body[bkey])
             # delve into A children
             for akey in a.body:
                 if len(a.body[akey]) == 0:
