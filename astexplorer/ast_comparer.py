@@ -1,21 +1,23 @@
-from typing import List
+from typing import List, Callable, Iterable
 
+from astexplorer.brief_tree import FuncTree, BriefNode
 from astexplorer.copypaste import *
 from astexplorer.utils import *
 
-class AstComparer:
 
+class AstComparer:
     def __init__(self):
         self.copypastes = []  # type: List[Copypaste]
         self.min_cp_weight = 20
 
-    def compare_pre_process_functions(self, functions):
+    def compare_pre_process_functions(self, functions: List[FuncTree]):
+        # give all function arguments uniform names (p0, p1 ...)
         for fun in functions:
             fun.rename_ptrs()
             fun.weight_tree()
             fun.calc_hashes()
 
-    def find_copypastes(self, functions) -> List[Copypaste]:
+    def find_copypastes(self, functions: List[FuncTree]) -> List[Copypaste]:
         for i, fa in enumerate(functions):
             j = i + 1
             while j < len(functions):
@@ -25,11 +27,11 @@ class AstComparer:
         self.sort_copypastes()
         return self.copypastes
 
-    def find_func_copypastes(self, fa, fb):
+    def find_func_copypastes(self, fa: FuncTree, fb: FuncTree) -> None:
         self.find_node_copypastes(fa, fb, fa.children, fb.children)
 
-    def find_node_copypastes(self, fa, fb, a_list, b_list):
-
+    def find_node_copypastes(self, fa: FuncTree, fb: FuncTree,
+                             a_list: List[BriefNode], b_list: List[BriefNode]) -> None:
         # find copypastes on the current level
         cp_list = find_sub_sequences(a_list, b_list, lambda x, y: x.hash == y.hash)
         for cp in cp_list:
@@ -55,13 +57,11 @@ class AstComparer:
                 if len(a.body[""]) == 0:
                     continue
                 self.find_node_copypastes(fa, fb, a.body[""], b_list)
-        return
 
     def sort_copypastes(self):
         self.copypastes.sort(key=lambda x: x.count * 100 + x.weight, reverse=True)
 
-    def read_src_lines(self, read_file_by_path):
-
+    def read_src_lines(self, read_file_by_path: Callable[[str], Iterable[str]]) -> str:
         # group copy-pastes by file names
         cp_by_file = {}
         for item in self.copypastes:

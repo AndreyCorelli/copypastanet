@@ -1,4 +1,6 @@
 import hashlib
+from typing import List, Dict
+
 
 class BriefNode:
     compare_op_symbols = {'Lt': '<', 'Gt': '>', 'Eq': '==', 'NotEq': '!==',
@@ -8,19 +10,11 @@ class BriefNode:
 
     math_unr_op_symbols = {'USub': '-', 'Not': 'not '}
 
-    def __init__(self):
+    def __init__(self, function='', loc=None):
         self.operands = []
-        self.function = ''
-        self.weight = 0
-        self.depth = 0
-        self.line_start = 0
-        self.line_end = 0
-        self.hash = ''
-
-    def __init__(self, function, loc=None):
-        self.function = function
+        self.function = function  # type: str
         self.arguments = []
-        self.body = {}
+        self.body = {}  # type: Dict[str, List[BriefNode]]
         self.id = function
         self.instance = None
         self.weight = 0
@@ -36,25 +30,25 @@ class BriefNode:
     def __str__(self):
         return self.stringify(self)
 
-    def stringify_subtree(self, str, indent):
+    def stringify_subtree(self, sstr: str, indent: int):
         pads = ' ' * (indent * 4)
-        str += pads
-        str += self.__str__()
-        str += '\n'
+        sstr += pads
+        sstr += self.__str__()
+        sstr += '\n'
         for arg in self.arguments:
-            str = arg.stringify_subtree(str, indent + 1)
+            sstr = arg.stringify_subtree(sstr, indent + 1)
         for b_list in self.body.values():
             for b_child in b_list:
-                str = b_child.stringify_subtree(str, indent + 1)
-        return str
+                sstr = b_child.stringify_subtree(sstr, indent + 1)
+        return sstr
 
-    def stringify(self, node):
+    def stringify(self, node: 'BriefNode') -> str:
         s = self.stringify_expression(node)
         if node.depth > 0:
             s += (' [' + str(node.depth) + ']')
         return s
 
-    def stringify_expression(self, node):
+    def stringify_expression(self, node: 'BriefNode') -> str:
         if node.function == 'Name':
             if node.instance is not None:
                 return node.instance + '.' + node.id
@@ -152,9 +146,9 @@ class FuncTree:
 
     weight_by_function = {'Attribute': 1, 'Name': 1, 'Num': 1, 'NameConstant': 1, 'Str': 1, 'Tuple': 5}
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.file = ''
-        self.children = []
+        self.children = []  # type: List[BriefNode]
         self.name = name
         self.args = {}
 
@@ -162,18 +156,18 @@ class FuncTree:
         args = ', '.join(self.args)
         return 'def ' + self.name + '(' + args + '):'
 
-    def stringify(self):
+    def stringify(self) -> str:
         title = str(self) + '\n'
         for child in self.children:
             title = child.stringify_subtree(title, 0)
         return title
 
-    def calc_hashes(self):
+    def calc_hashes(self) -> None:
         hash_calc = hashlib.md5()
         for child in self.children:
-            self.calc_hash(child, hash_calc)
+            self.calc_hash(child, str(hash_calc))
 
-    def calc_hash(self, child, hash_calc):
+    def calc_hash(self, child: BriefNode, hash_calc: str) -> str:
         hash_src = str(child)
         # plus body items
         for key in child.body:
@@ -186,12 +180,13 @@ class FuncTree:
         child.hash = hashlib.md5(hash_src.encode('utf-8')).hexdigest()
         return child.hash
 
-    # give weight to each node, recursively
-    def weight_tree(self):
+    def weight_tree(self) -> None:
+        # give weight to each node, recursively
+        # the weight reflects node's depth and complexity
         for child in self.children:
             self.weight_sub_tree(child, 1)
 
-    def weight_sub_tree(self, child, depth):
+    def weight_sub_tree(self, child: BriefNode, depth: int) -> List[int]:
         max_depth = depth
         child.weight = FuncTree.default_node_weight
         if child.function in FuncTree.weight_by_function:
@@ -220,7 +215,7 @@ class FuncTree:
         for child in self.children:
             self.rename_ptrs_for_node(child)
 
-    def rename_ptrs_for_node(self, node):
+    def rename_ptrs_for_node(self, node: BriefNode) -> None:
         if node.function == 'Name':
             node.id = self.find_suitable_ptr(node.id)
         elif node.function == 'Call':
@@ -235,7 +230,7 @@ class FuncTree:
             for child in child_list:
                 self.rename_ptrs_for_node(child)
 
-    def find_suitable_ptr(self, name):
+    def find_suitable_ptr(self, name: str) -> str:
         if name not in self.args:
             return name
         if name == 'self':

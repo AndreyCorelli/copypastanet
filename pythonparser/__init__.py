@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import sys, pythonparser.source, pythonparser.lexer, pythonparser.parser, pythonparser.diagnostic
 
+
 def parse_buffer(buffer, mode="exec", flags=[], version=None, engine=None):
     """
     Like :meth:`parse`, but accepts a :class:`source.Buffer` instead of
@@ -30,6 +31,7 @@ def parse_buffer(buffer, mode="exec", flags=[], version=None, engine=None):
         return parser.single_input(), lexer.comments
     elif mode == "eval":
         return parser.eval_input(), lexer.comments
+
 
 def parse(source, filename="<unknown>", mode="exec",
           flags=[], version=None, engine=None):

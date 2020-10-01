@@ -1,7 +1,11 @@
-from astexplorer.brief_tree import *
+from typing import List
 
-def go_down_tree(ast):
-    functions = []
+from astexplorer.brief_tree import *
+from pythonparser.ast import Module
+
+
+def go_down_tree(ast: Module):
+    functions = []  # type: List[FuncTree]
     if ast.body is None:
         return functions
     return go_down_body(ast.body, functions)
@@ -14,7 +18,7 @@ def go_down_tree2(ast):
     return go_down_body(ast.body, functions)
 
 
-def go_down_body(node, functions):
+def go_down_body(node, functions: List[FuncTree]) -> List[FuncTree]:
     for item in node:
         if item.__class__.__name__ == 'ClassDef':
             if hasattr(item, 'body'):
@@ -26,7 +30,7 @@ def go_down_body(node, functions):
     return functions
 
 
-def go_down_func(node):
+def go_down_func(node) -> FuncTree:
     func = FuncTree(node.name)
     args = node.args.args
     if args is not None:
