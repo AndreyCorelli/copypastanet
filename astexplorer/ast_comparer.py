@@ -1,10 +1,12 @@
+from typing import List
+
 from astexplorer.copypaste import *
 from astexplorer.utils import *
 
 class AstComparer:
 
     def __init__(self):
-        self.copypastes = []
+        self.copypastes = []  # type: List[Copypaste]
         self.min_cp_weight = 20
 
     def compare_pre_process_functions(self, functions):
@@ -13,7 +15,7 @@ class AstComparer:
             fun.weight_tree()
             fun.calc_hashes()
 
-    def find_copypastes(self, functions):
+    def find_copypastes(self, functions) -> List[Copypaste]:
         for i, fa in enumerate(functions):
             j = i + 1
             while j < len(functions):

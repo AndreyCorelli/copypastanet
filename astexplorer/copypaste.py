@@ -19,3 +19,5 @@ class Copypaste:
         s += str(self.node_a) + ' ...'
         return s
 
+    def __repr__(self):
+        return self.__str__()

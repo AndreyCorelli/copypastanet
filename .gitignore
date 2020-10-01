@@ -8,3 +8,4 @@ _build/
 /dist/
 /pythonparser/coverage/parser.py
 /doc/coverage/*
+venv

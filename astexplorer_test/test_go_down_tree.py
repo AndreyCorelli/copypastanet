@@ -5,8 +5,8 @@ from astexplorer.ast_parser import *
 from pythonparser import parse
 import json
 
-class TestGoDownTree(TestCase):
 
+class TestGoDownTree(TestCase):
     def test_go_down_tree01(self):
         fname = '../astexplorer/ast_parser.py'
         #fname = 'sample01.txt'
@@ -23,7 +23,6 @@ class TestGoDownTree(TestCase):
             print(fun.stringify())
             print()
 
-
     def test_go_down_tree02(self):
         return
         fname = 'sample02.txt'
@@ -33,7 +32,6 @@ class TestGoDownTree(TestCase):
         ast = parse(data, fname, "exec")
         tree = go_down_tree(ast)
         print(tree[0].stringify())
-
 
     def test_rename_ptrs(self):
         return
@@ -48,7 +46,6 @@ class TestGoDownTree(TestCase):
         print(json.dumps(tree, default=serialize, sort_keys=False, indent=4))
         self.assertEqual(2, len(tree))
 
-
     def test_math(self):
         return
         fname = 'sample_math01.txt'
@@ -59,7 +56,6 @@ class TestGoDownTree(TestCase):
         tree = go_down_tree(ast)
         print(tree[0].stringify())
         #print(json.dumps(tree[0], default=serialize, sort_keys=False, indent=4))
-
 
     def test_ifelse(self):
         return
