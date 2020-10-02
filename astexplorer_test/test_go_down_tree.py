@@ -8,7 +8,7 @@ import json
 
 class TestGoDownTree(TestCase):
     def test_go_down_tree01(self):
-        fname = '../astexplorer/ast_parser.py'
+        fname = '../examples/ast_parser.py'
         #fname = 'sample01.txt'
         with open(fname, 'r') as myfile:
             data = myfile.read()
@@ -25,7 +25,7 @@ class TestGoDownTree(TestCase):
 
     def test_go_down_tree02(self):
         return
-        fname = 'sample02.txt'
+        fname = '../examples/sample02.txt'
         with open(fname, 'r') as myfile:
             data = myfile.read()
 
@@ -35,7 +35,7 @@ class TestGoDownTree(TestCase):
 
     def test_rename_ptrs(self):
         return
-        fname = 'sample01.txt'
+        fname = '../examples/sample01.txt'
         with open(fname, 'r') as myfile:
             data = myfile.read()
 
@@ -48,7 +48,7 @@ class TestGoDownTree(TestCase):
 
     def test_math(self):
         return
-        fname = 'sample_math01.txt'
+        fname = '../examples/sample_math01.txt'
         with open(fname, 'r') as myfile:
             data = myfile.read()
 
@@ -59,7 +59,7 @@ class TestGoDownTree(TestCase):
 
     def test_ifelse(self):
         return
-        fname = 'sample_ifelse_01.txt'
+        fname = '../examples/sample_ifelse_01.txt'
         with open(fname, 'r') as myfile:
             data = myfile.read()
 

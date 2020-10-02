@@ -1,4 +1,5 @@
 from datetime import date, time
+from typing import List, Any, Callable
 
 
 class Sequence:
@@ -29,7 +30,8 @@ def serialize(obj):
     return obj.__dict__
 
 
-def find_sub_sequences(list_a, list_b, compare_f):
+def find_sub_sequences(list_a: List[Any], list_b: List[Any],
+                       compare_f: Callable[[Any, Any], bool]):
     seqs = []
     i = -1
 
@@ -52,27 +54,3 @@ def find_sub_sequences(list_a, list_b, compare_f):
                 k += 1
             i = k - 1
     return seqs
-"""
-for (var i = 0; i < listA.Length; i++)
-{
-    Sequence s = null;
-    for (var j = 0; j < listB.Length; j++)
-    {
-        if (listA[i] != listB[j]) continue;
-        s = new Sequence(i, j);
-        seqs.Add(s);
-        var k = i + 1;
-        j++;
-        while (k < listA.Length && j < listB.Length)
-        {
-            if (listA[k] != listB[j])
-                break;            
-            s.count++;
-            j++;
-            k++;
-        }
-        i = k - 1;
-    }
-
-"""
-
