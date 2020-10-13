@@ -5,10 +5,10 @@ buf = None
 with open(sys.argv[1]) as f:
     buf = source.Buffer(f.read(), f.name)
 
-engine   = diagnostic.Engine()
+engine = diagnostic.Engine()
 rewriter = source.Rewriter(buf)
-in_quot  = False
-replace  = { "'": "\"", "'''": "\"\"\"" }
+in_quot = False
+replace = {"'": "\"", "'''": "\"\"\""}
 for token in lexer.Lexer(buf, (3, 4), engine):
     source = token.loc.source()
     if token.kind == "strbegin" and source in replace.keys():

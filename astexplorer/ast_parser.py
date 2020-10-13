@@ -1,6 +1,7 @@
 from typing import List
 
-from astexplorer.brief_tree import *
+from astexplorer.brief_node import BriefNode
+from astexplorer.func_tree import FuncTree
 from pythonparser.ast import Module
 
 
@@ -43,6 +44,8 @@ def go_down_func(node) -> FuncTree:
         func.children.append(child)
         go_down_expression(item, child)
 
+    for node in func.children:
+        node.explore_variables()
     return func
 
 

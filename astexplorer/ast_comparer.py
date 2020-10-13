@@ -1,7 +1,8 @@
 from typing import List, Callable, Iterable
 
-from astexplorer.brief_tree import FuncTree, BriefNode
+from astexplorer.brief_node import BriefNode, VAR_NAMES_INDEX
 from astexplorer.copypaste import *
+from astexplorer.func_tree import FuncTree
 from astexplorer.utils import *
 
 
@@ -32,8 +33,10 @@ class AstComparer:
 
     def find_node_copypastes(self, fa: FuncTree, fb: FuncTree,
                              a_list: List[BriefNode], b_list: List[BriefNode]) -> None:
-        # find copypastes on the current level
-        cp_list = find_sub_sequences(a_list, b_list, lambda x, y: x.hash == y.hash)
+        # find copypastes on the current level comparing each node by its hash
+        cp_list = find_sub_sequences(a_list, b_list,
+                                     lambda x, y:
+                                     x.hash_by_type[VAR_NAMES_INDEX] == y.hash_by_type[VAR_NAMES_INDEX])
         for cp in cp_list:
             if cp.count < 2:
                 continue

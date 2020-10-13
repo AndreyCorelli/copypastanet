@@ -1,5 +1,54 @@
 import hashlib
-from typing import List, Dict
+from typing import List, Dict, Set, Optional
+
+# use original variable names like get_cartesian(bearing, distance)
+VAR_NAMES_ORIGINAL = 'orig'
+# user variables' indices inside the block like
+# get_cartesian(bearing, distance) -> get_cartesian(v1, v2)
+VAR_NAMES_INDEX = 'index'
+# use hash for each variable built up on all variable's usages
+VAR_NAMES_HASH = 'hash'
+
+
+def get_hash(s: str) -> str:
+    return hashlib.md5(s.encode('utf-8')).hexdigest()
+
+
+class BriefVariable:
+    def __init__(self, name: str):
+        self.name = name
+        self.block_index = ''
+        self.usage_hash = ''
+
+    def copy(self) -> 'BriefVariable':
+        cpy = BriefVariable(self.name)
+        cpy.block_index = self.block_index
+        cpy.usage_hash = self.usage_hash
+        return cpy
+
+    def __str__(self):
+        return f'{self.name} [{self.block_index}], #{self.usage_hash}'
+
+
+class BriefVariableSet:
+    def __init__(self):
+        self.variables = []  # type: List[BriefVariable]
+        # { name: index in self.variables }
+        self.index_by_name = {}  # type: Dict[str, int]
+
+    def find_var(self, var_name: str) -> Optional[BriefVariable]:
+        return self.variables[self.index_by_name[var_name]] if var_name in self.index_by_name else None
+
+    def add_variable(self, name: str) -> None:
+        self.variables.append(BriefVariable(name))
+        self.index_by_name[name] = len(self.variables) - 1
+
+    def update(self, subset: 'BriefVariableSet') -> None:
+        for var in subset.variables:
+            if var.name in self.index_by_name:
+                continue
+            self.variables.append(var.copy())
+            self.index_by_name[var.name] = len(self.variables) - 1
 
 
 class BriefNode:
@@ -13,19 +62,24 @@ class BriefNode:
     def __init__(self, function='', loc=None):
         self.operands = []
         self.function = function  # type: str
-        self.arguments = []
+        self.arguments = []  # type: List[BriefNode]
         self.body = {}  # type: Dict[str, List[BriefNode]]
         self.id = function
         self.instance = None
         self.weight = 0
         self.depth = 0
-        self.hash = ''
+        # FuncTree recursively calculates hash for each node
+        self.hash_by_type = {VAR_NAMES_ORIGINAL: '',
+                             VAR_NAMES_INDEX: '',
+                             VAR_NAMES_HASH: '' }
         if loc is not None:
             self.line_start = loc.begin_pos
             self.line_end = loc.end_pos
         else:
             self.line_start = 0
             self.line_end = 0
+        # variable local name - variable uniform name
+        self.variables = BriefVariableSet()
 
     def __str__(self):
         return self.stringify(self)
@@ -42,20 +96,37 @@ class BriefNode:
                 sstr = b_child.stringify_subtree(sstr, indent + 1)
         return sstr
 
-    def stringify(self, node: 'BriefNode') -> str:
-        s = self.stringify_expression(node)
+    def stringify(self,
+                  node: 'BriefNode',
+                  var_names_source: str = VAR_NAMES_ORIGINAL) -> str:
+        s = self.stringify_expression(node, var_names_source)
         if node.depth > 0:
-            s += (' [' + str(node.depth) + ']')
+            s = f'{s} [{node.depth}]'
         return s
 
-    def stringify_expression(self, node: 'BriefNode') -> str:
+    def get_variable_name(self,
+                          node: 'BriefNode',
+                          uniform_var_names: str = VAR_NAMES_ORIGINAL) -> str:
+        orig_name = node.id
+        if node.instance is not None:
+            orig_name = node.instance + '.' + node.id
+        if uniform_var_names == VAR_NAMES_ORIGINAL:
+            return orig_name
+        var = self.variables.find_var(orig_name)
+        if not var:
+            return orig_name
+        if uniform_var_names == VAR_NAMES_INDEX:
+            return var.block_index
+        return var.usage_hash
+
+    def stringify_expression(self,
+                             node: 'BriefNode',
+                             uniform_var_names: str = VAR_NAMES_ORIGINAL) -> str:
         if node.function == 'Name':
-            if node.instance is not None:
-                return node.instance + '.' + node.id
-            return node.id
+            return self.get_variable_name(node, uniform_var_names)
 
         if node.function == 'NameConstant':
-            return node.id
+            return self.get_variable_name(node, uniform_var_names)
 
         if node.function == 'Str':
             return "#str'" + node.id + "'"
@@ -140,99 +211,15 @@ class BriefNode:
         inst_preffix = node.instance + '.' if node.instance is not None else ''
         return node.function + ' ' + inst_preffix + node.id
 
-
-class FuncTree:
-    default_node_weight = 10
-
-    weight_by_function = {'Attribute': 1, 'Name': 1, 'Num': 1, 'NameConstant': 1, 'Str': 1, 'Tuple': 5}
-
-    def __init__(self, name: str):
-        self.file = ''
-        self.children = []  # type: List[BriefNode]
-        self.name = name
-        self.args = {}
-
-    def __str__(self):
-        args = ', '.join(self.args)
-        return 'def ' + self.name + '(' + args + '):'
-
-    def stringify(self) -> str:
-        title = str(self) + '\n'
-        for child in self.children:
-            title = child.stringify_subtree(title, 0)
-        return title
-
-    def calc_hashes(self) -> None:
-        hash_calc = hashlib.md5()
-        for child in self.children:
-            self.calc_hash(child, str(hash_calc))
-
-    def calc_hash(self, child: BriefNode, hash_calc: str) -> str:
-        hash_src = str(child)
-        # plus body items
-        for key in child.body:
-            for sub in child.body[key]:
-                hash_src += self.calc_hash(sub, hash_calc)
-        # plus arguments
-        for arg in child.arguments:
-            hash_src += self.calc_hash(arg, hash_calc)
-
-        child.hash = hashlib.md5(hash_src.encode('utf-8')).hexdigest()
-        return child.hash
-
-    def weight_tree(self) -> None:
-        # give weight to each node, recursively
-        # the weight reflects node's depth and complexity
-        for child in self.children:
-            self.weight_sub_tree(child, 1)
-
-    def weight_sub_tree(self, child: BriefNode, depth: int) -> List[int]:
-        max_depth = depth
-        child.weight = FuncTree.default_node_weight
-        if child.function in FuncTree.weight_by_function:
-            child.weight = FuncTree.weight_by_function[child.function]
-
-        # sum body weights
-        for key in child.body:
-            for sub in child.body[key]:
-                wd = self.weight_sub_tree(sub, 0)
-                max_depth = max(max_depth, wd[1])
-                child.weight += wd[0]
-        # sum arguments
-        for arg in child.arguments:
-            arg_weight = self.weight_sub_tree(arg, 0)
-            max_depth = max(max_depth, arg_weight[1])
-            if arg_weight[0] > FuncTree.default_node_weight:
-                arg_weight[0] -= FuncTree.default_node_weight
-            child.weight += arg_weight[0]
-
-        child.depth = max_depth
-        return [child.weight, max_depth + 1]
-
-    # make parameter names, e.g. (self, folder, mode) "minimized"
-    # e.q. (self, #p1, #p2)
-    def rename_ptrs(self):
-        for child in self.children:
-            self.rename_ptrs_for_node(child)
-
-    def rename_ptrs_for_node(self, node: BriefNode) -> None:
-        if node.function == 'Name':
-            node.id = self.find_suitable_ptr(node.id)
-        elif node.function == 'Call':
-            if node.instance is not None:
-                node.instance = self.find_suitable_ptr(node.instance)
-        elif node.function == 'Attribute':
-            node.instance = self.find_suitable_ptr(node.instance)
-
-        for arg in node.arguments:
-            self.rename_ptrs_for_node(arg)
-        for child_list in node.body.values():
-            for child in child_list:
-                self.rename_ptrs_for_node(child)
-
-    def find_suitable_ptr(self, name: str) -> str:
-        if name not in self.args:
-            return name
-        if name == 'self':
-            return name
-        return '#p' + str(self.args[name])
+    def explore_variables(self):
+        if self.function == 'Name' or self.function == 'NameConstant':
+            self.variables.add_variable(self.id)
+        for k in self.body:
+            for node in self.body[k]:
+                node.explore_variables()
+                self.variables.update(node.variables)
+        for node in self.arguments:
+            node.explore_variables()
+            self.variables.update(node.variables)
+        for i in range(len(self.variables.variables)):
+            self.variables.variables[i].block_index = str(i)
