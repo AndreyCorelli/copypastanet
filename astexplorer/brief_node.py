@@ -60,7 +60,6 @@ class BriefNode:
     math_unr_op_symbols = {'USub': '-', 'Not': 'not '}
 
     def __init__(self, function='', loc=None):
-        self.operands = []
         self.function = function  # type: str
         self.arguments = []  # type: List[BriefNode]
         self.body = {}  # type: Dict[str, List[BriefNode]]
@@ -121,12 +120,12 @@ class BriefNode:
 
     def stringify_expression(self,
                              node: 'BriefNode',
-                             uniform_var_names: str = VAR_NAMES_ORIGINAL) -> str:
+                             var_names_source: str = VAR_NAMES_ORIGINAL) -> str:
         if node.function == 'Name':
-            return self.get_variable_name(node, uniform_var_names)
+            return self.get_variable_name(node, var_names_source)
 
         if node.function == 'NameConstant':
-            return self.get_variable_name(node, uniform_var_names)
+            return self.get_variable_name(node, var_names_source)
 
         if node.function == 'Str':
             return "#str'" + node.id + "'"
@@ -135,44 +134,47 @@ class BriefNode:
             return node.instance + '.' + node.id
 
         if node.function == 'Assign':
-            return self.stringify(node.arguments[0]) + '=' + self.stringify(node.body['_'][0])
+            return self.stringify(node.arguments[0], var_names_source) + '=' \
+                   + self.stringify(node.body['_'][0], var_names_source)
 
         # + - * / Pow
         if node.function in BriefNode.math_bin_op_symbols:
             smb = BriefNode.math_bin_op_symbols[node.function]
-            return self.stringify(node.body['left'][0]) + smb + self.stringify(node.body['right'][0])
+            return self.stringify(node.body['left'][0], var_names_source) + smb + \
+                   self.stringify(node.body['right'][0], var_names_source)
 
         if node.function == 'AugAssign':
             smb = BriefNode.math_bin_op_symbols[node.id]
-            return self.stringify(node.arguments[0]) + smb + '=' + self.stringify(node.body['_'][0])
+            return self.stringify(node.arguments[0], var_names_source) + smb + '=' + \
+                   self.stringify(node.body['_'][0], var_names_source)
 
         # unary op
         if node.function == 'UnaryOp':
             smb = BriefNode.math_unr_op_symbols[node.id]
-            return smb + self.stringify(node.body['_'][0])
+            return smb + self.stringify(node.body['_'][0], var_names_source)
 
         # comparison
         if node.function == 'Compare':
             smb = BriefNode.compare_op_symbols[node.id]
-            cmp_str = ', '.join([self.stringify(c) for c in node.body['comparators']])
-            return self.stringify(node.body['left'][0]) + ' ' + smb + ' ' + cmp_str
+            cmp_str = ', '.join([self.stringify(c, var_names_source) for c in node.body['comparators']])
+            return self.stringify(node.body['left'][0], var_names_source) + ' ' + smb + ' ' + cmp_str
 
         if node.function == 'If' or node.function == 'Elif':
-            if_case = self.stringify(node.arguments[0])
+            if_case = self.stringify(node.arguments[0], var_names_source)
             return node.function + ' ' + if_case + ':'
 
         if node.function == 'For':
-            iter_tg = self.stringify(node.arguments[0])
-            iter_vl = self.stringify(node.arguments[1])
+            iter_tg = self.stringify(node.arguments[0], var_names_source)
+            iter_vl = self.stringify(node.arguments[1], var_names_source)
             return node.function + ' ' + iter_tg + ' in ' + iter_vl + ':'
 
         if node.function == 'While':
-            test_node = self.stringify(node.body[""][0])
+            test_node = self.stringify(node.body[""][0], var_names_source)
             return node.function + ' ' + test_node + ':'
 
         if node.function == 'With':
-            expr = self.stringify(node.body["opt_expr"][0])
-            opt_vars = ', '.join([self.stringify(c) for c in node.body['opt_vars']])
+            expr = self.stringify(node.body["opt_expr"][0], var_names_source)
+            opt_vars = ', '.join([self.stringify(c, var_names_source) for c in node.body['opt_vars']])
             if len(opt_vars) > 0:
                 opt_vars = " as " + opt_vars
             return node.function + ' ' + expr + opt_vars + ':'
@@ -181,29 +183,29 @@ class BriefNode:
             return node.id
 
         if node.function == 'Tuple':
-            arg_list = ', '.join([self.stringify(a) for a in node.arguments])
+            arg_list = ', '.join([self.stringify(a, var_names_source) for a in node.arguments])
             return 'Tuple{' + arg_list + '}'
 
         if node.function == 'List':
-            arg_list = ', '.join([self.stringify(a) for a in node.body["items"]])
+            arg_list = ', '.join([self.stringify(a, var_names_source) for a in node.body["items"]])
             return '#List[' + arg_list + ']'
 
         if node.function == 'Return':
-            return 'return ' + self.stringify(node.body['_'][0])
+            return 'return ' + self.stringify(node.body['_'][0], var_names_source)
 
         if node.function == 'Lambda':
-            arg_list = ', '.join([self.stringify(a) for a in node.arguments])
+            arg_list = ', '.join([self.stringify(a, var_names_source) for a in node.arguments])
             return arg_list + ' => {}'
 
         if node.function == 'Call':
             inst_preffix = node.instance + '.' if node.instance is not None else ''
             args_lst = []
             for arg in node.arguments:
-                args_lst.append(self.stringify(arg))
+                args_lst.append(self.stringify(arg, var_names_source))
             return inst_preffix + node.id + '(' + ",".join(args_lst) + ')'
 
         if node.function == 'Raise':
-            s_body = self.stringify(node.body['_'][0]) if '_' in node.body else ''
+            s_body = self.stringify(node.body['_'][0], var_names_source) if '_' in node.body else ''
             return 'raise ' + s_body
 
         if node.id == node.function:

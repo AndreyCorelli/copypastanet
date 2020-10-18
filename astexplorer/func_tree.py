@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from astexplorer.brief_node import BriefVariableSet, BriefNode, \
+from astexplorer.brief_node import BriefNode, \
     VAR_NAMES_INDEX, VAR_NAMES_HASH, get_hash
 
 

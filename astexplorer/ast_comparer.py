@@ -43,7 +43,7 @@ class AstComparer:
             cpy = Copypaste(fa, fb, a_list[cp.start_a], b_list[cp.start_b])
             cpy.count = cp.count
             for i in range(cp.start_a + 1, cp.start_a + cp.count):
-                cpy.weight += a_list[i].weight
+                cpy.update(a_list[i])
             self.copypastes.append(cpy)
 
         # go down
