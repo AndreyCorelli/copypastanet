@@ -143,8 +143,4 @@ class FuncTree:
                 self.rename_ptrs_for_node(child)
 
     def find_suitable_ptr(self, name: str) -> str:
-        if name not in self.args:
-            return name
-        if name == 'self':
-            return name
-        return '#p' + str(self.args[name])
+        return name

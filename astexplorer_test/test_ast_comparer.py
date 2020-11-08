@@ -114,6 +114,13 @@ class TestAstComparer(TestCase):
         self.assertEqual(1, len(cps))
         self.assertEqual(3, cps[0].count, 'Should include all the 3 lexems')
 
+    def test_diff_arg_count(self):
+        fname = '../examples/diff_arg_count.py'
+        cps, _ = self.find_copypastes_in_file(fname)
+        # so far the test fails
+        self.assertEqual(1, len(cps))
+        self.assertEqual(3, cps[0].count, 'Should include all the 3 lexems')
+
     def find_copypastes_in_file(self, fname: str) -> Tuple[List[Copypaste], AstComparer]:
         with open(fname, 'r') as myfile:
             data = myfile.read()
