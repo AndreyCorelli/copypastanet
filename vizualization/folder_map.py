@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 
 
 class ModuleStatistics:
@@ -18,12 +18,17 @@ class ModuleStatistics:
 
 
 class FolderNode:
-    def __init__(self, full_path: str):
+    def __init__(self,
+                 full_path: str,
+                 file_name: str = '',
+                 is_file: Optional[bool] = None):
         self.full_path = full_path
-        self.file_name = os.path.basename(full_path)
-        self.is_file = os.path.isfile(full_path)
-        self.children: List['FolderNode'] = []
+        self.file_name = file_name or os.path.basename(full_path)
+        self.is_file = is_file if is_file is not None else os.path.isfile(full_path)
+        self.children: List[FolderNode] = []
         self.statistics: ModuleStatistics = ModuleStatistics()
+        self.plain_file_name = ''
+        self.ancestors: List[FolderNode] = []
 
     def __str__(self):
         prefix = 'file' if self.is_file else 'dir'

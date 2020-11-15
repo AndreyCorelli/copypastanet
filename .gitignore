@@ -9,3 +9,4 @@ _build/
 /pythonparser/coverage/parser.py
 /doc/coverage/*
 venv
+rendered_folder

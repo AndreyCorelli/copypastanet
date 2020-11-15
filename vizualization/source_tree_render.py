@@ -12,7 +12,7 @@ from vizualization.folder_map import FolderNode
 
 class SourceTreeRender:
     def __init__(self):
-        self.source_folder = ''
+        self.source_folders: List[str] = []
         self.output_folder = ''
         self.ignore_list: List[str] = ['venv']
         self.include_list: List[str] = ['*.py']
@@ -23,18 +23,25 @@ class SourceTreeRender:
         self.cps_by_path: Dict[str, List[Copypaste]] = {}
 
     def explore_sources(self,
-                        source_folder='',
+                        source_folders: List[str],
                         output_folder='',
                         ignore_list: List[str] = None,
                         include_list: List[str] = None):
-        self.source_folder = source_folder
+        if not source_folders:
+            raise ValueError('source_folders argument should contain at least one path')
+        self.source_folders = source_folders
         self.output_folder = output_folder
         self.ignore_list = ignore_list if ignore_list is not None else self.ignore_list
         self.include_list = include_list if include_list is not None else self.include_list
 
-        self.read_folder_tree(source_folder, None)
+        if len(self.source_folders) == 1:
+            self.read_folder_tree(source_folders[0], None)
+        else:
+            self.root_folder = FolderNode('.', '.', False)
+            for path in self.source_folders:
+                self.read_folder_tree(path, self.root_folder)
         if not self.root_folder:
-            print(f'No source files / directories are found at {source_folder}')
+            print(f'No source files / directories are found at {", ".join(source_folders)}')
             return
         self.read_functions(self.root_folder)
         self.find_copypastes()
@@ -65,7 +72,7 @@ class SourceTreeRender:
             copypastes = self.cps_by_path.get(node.full_path) or []
             node.statistics.functions = len(functions)
             node.statistics.copypastes = len(copypastes)
-            node.statistics.longest = max([c.count for c in copypastes])
+            node.statistics.longest = max([c.count for c in copypastes]) if copypastes else 0
             return
         for child in node.children:
             self.summarize_node_stats_iter(child)
@@ -102,10 +109,13 @@ class SourceTreeRender:
         if not parent:
             self.root_folder = node
         else:
+            node.ancestors = list(parent.ancestors)
+            node.ancestors.append(parent)
             parent.children.append(node)
-        for file_name in os.listdir(path):
-            sub_path = os.path.join(path, file_name)
-            self.read_folder_tree(sub_path, node)
+        if os.path.isdir(path):
+            for file_name in os.listdir(path):
+                sub_path = os.path.join(path, file_name)
+                self.read_folder_tree(sub_path, node)
 
     def should_parse(self, path: str) -> bool:
         file_name = os.path.basename(path)
@@ -121,7 +131,8 @@ class SourceTreeRender:
     @classmethod
     def name_matches_pattern(cls, name: str, ptrn: str):
         if '*' in ptrn:
-            regex_str = re.sub('.', '\\.', ptrn).sub('*', '.*', ptrn)
+            regex_str = re.sub(r'\.', r'\.', ptrn)
+            regex_str = re.sub(r'\*', '.*', regex_str)
             reg = re.compile(regex_str, re.IGNORECASE)
             return reg.match(name)
 
