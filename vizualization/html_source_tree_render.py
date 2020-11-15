@@ -14,6 +14,7 @@ class HtmlSourceTreeRender(SourceTreeRender):
     def render(self):
         self.render_styles()
         self.give_unique_filenames(self.root_folder, None, set())
+        self.root_folder.plain_file_name = 'index.html'
         self.render_folder_or_file(self.root_folder)
 
     def render_folder_or_file(self, node: FolderNode):
@@ -47,7 +48,7 @@ class HtmlSourceTreeRender(SourceTreeRender):
             files = [c for c in node.children if c.is_file]
             for file in files:
                 fw.write(f'''    <p> {file.statistics.copypastes} / {file.statistics.functions}
-                    <a href="{file.plain_file_name}">./{file.file_name}</a>
+                    <a href="{file.plain_file_name}">{file.file_name}</a>
                         </p>\n''')
             self.render_footer(fw)
 
@@ -90,6 +91,7 @@ class HtmlSourceTreeRender(SourceTreeRender):
                 white-space: -pre-wrap;      /* Opera 4-6 */
                 white-space: -o-pre-wrap;    /* Opera 7 */
                 word-wrap: break-word;       /* Internet Explorer 5.5+ */
+                line-height: 50%;
             }
             ''')
 
