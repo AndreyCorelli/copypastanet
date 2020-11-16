@@ -53,6 +53,7 @@ class BriefVariableSet:
 
 class BriefNode:
     compare_op_symbols = {'Lt': '<', 'Gt': '>', 'Eq': '==', 'NotEq': '!==',
+                          'LtE': '<=', 'GtE': '>=',
                           'In': 'in', 'NotIn': 'not in', 'Is': 'is', 'IsNot': 'is not'}
 
     math_bin_op_symbols = {'Add': '+', 'Div': '/', 'Mult': '*', 'Sub': '-', 'Pow': '^', 'Mod': '%'}

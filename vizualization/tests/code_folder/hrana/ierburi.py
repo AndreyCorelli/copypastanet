@@ -15,7 +15,7 @@ class Ierb(Fodder):
                     temperature: float,
                     term: float) -> float:
         if source_mass <= 0:
-            raise ValueError(f'Source mass is 0 or less')
+            raise ValueError('Source mass is 0 or less')
         k_dry = self.k_dry
         temperature = math.pow(temperature, 0.8)
         return source_mass * k_dry * math.pow(term * temperature, -0.5)
@@ -35,9 +35,9 @@ class Urzica(Ierb):
                     temperature: float,
                     term: float) -> float:
         if source_mass <= 0:
-            raise ValueError(f'Source mass is 0 or less')
+            raise ValueError('Source mass is 0 or less')
         if temperature > 42:
-            raise ValueError(f'Temperature is above 42')
+            raise ValueError('Temperature is above 42')
         k_dry = self.k_dry
         temperature = math.pow(temperature, 0.8)
         return source_mass * k_dry * math.pow(term * temperature, -0.4)
