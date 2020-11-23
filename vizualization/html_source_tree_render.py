@@ -53,21 +53,50 @@ class HtmlSourceTreeRender(SourceTreeRender):
             self.render_footer(fw)
 
     def render_file(self, node: FolderNode):
+        copypastes = self.cps_by_path.get(node.full_path, [])
+
         with self.open_file_to_write(node.plain_file_name) as fw:
             self.render_head(node, fw)
             self.render_navigation_path(node, fw)
             if node.ancestors:
                 fw.write(f'''    <p><a href="{node.ancestors[-1].plain_file_name}">../</a></p><br/>\n''')
 
-
             fw.write('''    <pre>\n''')
             line_index = 1
+
             with codecs.open(node.full_path, 'r', encoding='utf-8') as fr:
-                for line in fr.readlines():
-                    line_num_str = f'{line_index:03}'
-                    line_index += 1
-                    line_printed = f'{line_num_str}&nbsp;&nbsp;{html.escape(line)}<br/>\n'
-                    fw.write(line_printed)
+                full_text = fr.read()
+
+            line_start_index = 0
+            line_end_index = full_text.find('\n')
+            while True:
+                cpx_hint = ''
+                line = full_text[line_start_index:] if line_end_index < 0 else \
+                    full_text[line_start_index:line_end_index]
+                # is there some copypaste?
+                for c in copypastes:
+                    is_in = line_start_index <= c.start_index_a <= line_end_index  # OK
+                    is_in = is_in or (line_start_index <= c.end_index_a <= line_end_index)
+                    is_in = is_in or (c.start_index_a <= line_start_index <= c.end_index_a)
+                    is_in = is_in or (c.start_index_a <= line_end_index <= c.end_index_a)
+                    if is_in:
+                        cpx_hint = str(c)
+
+                line_num_str = f'{line_index:03}'
+                line_index += 1
+                line_printed = f'{line_num_str}&nbsp;&nbsp;'
+                if cpx_hint:
+                    line_printed += f'<a class="copy-line" href="#" title="{html.escape(cpx_hint)}">'
+                line_printed += html.escape(line)
+                if cpx_hint:
+                    line_printed += '</a>'
+                line_printed += '<br/>\n'
+                fw.write(line_printed)
+
+                if line_end_index < 0:
+                    break
+                line_start_index = line_end_index + 1
+                line_end_index = full_text.find('\n', line_start_index)
 
             fw.write('''\n    </pre>\n''')
             self.render_footer(fw)
@@ -91,7 +120,13 @@ class HtmlSourceTreeRender(SourceTreeRender):
                 white-space: -pre-wrap;      /* Opera 4-6 */
                 white-space: -o-pre-wrap;    /* Opera 7 */
                 word-wrap: break-word;       /* Internet Explorer 5.5+ */
-                line-height: 50%;
+                line-height: 55%;
+            }
+            
+            a.copy-line {
+                background-color: #ffe5e5;
+                text-decoration: none;
+                color: black;
             }
             ''')
 
