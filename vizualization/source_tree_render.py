@@ -1,12 +1,9 @@
 import os
-import codecs
 import regex as re
 from typing import List, Optional, Dict
-
 from astexplorer.ast_comparer import AstComparer, Copypaste
-from astexplorer.ast_parser import go_down_tree
+from astexplorer.ast_parser import AstParser
 from astexplorer.func_tree import FuncTree
-from pythonparser import parse
 from vizualization.folder_map import FolderNode
 
 
@@ -21,6 +18,7 @@ class SourceTreeRender:
         self.copypastes: List[Copypaste] = []
         self.func_by_path: Dict[str, List[FuncTree]] = {}
         self.cps_by_path: Dict[str, List[Copypaste]] = {}
+        self.file_parse_errors: Dict[str, str] = {}
 
     def explore_sources(self,
                         source_folders: List[str],
@@ -89,15 +87,11 @@ class SourceTreeRender:
     def read_functions(self, node: FolderNode) -> None:
         if node.is_file:
             try:
-                with codecs.open(node.full_path, 'r', encoding='utf-8') as myfile:
-                    data = myfile.read()
-                ast = parse(data, node.file_name, "exec")
-                functions = go_down_tree(ast)
-                for f in functions:
-                    f.file = node.full_path
-                    self.functions.append(f)
+                functions = AstParser().parse_module(node.full_path)
+                self.functions += functions
             except Exception as e:
-                print(f'There were error parsing file "{node.file_name}": {e}')
+                print(f'There were error parsing file "{node.full_path}": {e}')
+                self.file_parse_errors[node.full_path] = str(e)
             return
         for child in node.children:
             self.read_functions(child)

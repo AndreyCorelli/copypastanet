@@ -10,6 +10,9 @@ class Ierb(Fodder):
         self.btu = 0
         self.density = 0
 
+    def __str__(self):
+        return f'{self.btu}: {self.density}'
+
     def mass_drying(self,
                     source_mass: float,
                     temperature: float,

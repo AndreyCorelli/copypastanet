@@ -54,6 +54,7 @@ class HtmlSourceTreeRender(SourceTreeRender):
 
     def render_file(self, node: FolderNode):
         copypastes = self.cps_by_path.get(node.full_path, [])
+        error = self.file_parse_errors.get(node.full_path, '')
 
         with self.open_file_to_write(node.plain_file_name) as fw:
             self.render_head(node, fw)
@@ -61,9 +62,12 @@ class HtmlSourceTreeRender(SourceTreeRender):
             if node.ancestors:
                 fw.write(f'''    <p><a href="{node.ancestors[-1].plain_file_name}">../</a></p><br/>\n''')
 
+            if error:
+                fw.write('    <h3>There were errors:</h3>\n')
+                fw.write(f'    <p style="color:#550000">{html.escape(error)}</p>\n<br/>\n')
+
             fw.write('''    <pre>\n''')
             line_index = 1
-
             with codecs.open(node.full_path, 'r', encoding='utf-8') as fr:
                 full_text = fr.read()
 

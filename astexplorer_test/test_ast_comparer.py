@@ -1,9 +1,7 @@
 import unittest
-from typing import Tuple
 from unittest import TestCase
 from astexplorer.ast_parser import *
 from astexplorer.ast_comparer import *
-from pythonparser import parse
 
 
 def read_file_line_by_line(file_path):
@@ -16,10 +14,7 @@ class TestAstComparer(TestCase):
         fname = '../examples/lazy_copypaste.py'
         with open(fname, 'r') as myfile:
             data = myfile.read()
-        ast = parse(data, fname, "exec")
-        functions = go_down_tree(ast)
-        for f in functions:
-            f.file = fname
+        functions = AstParser().parse_module(fname)
 
         cmp = AstComparer()
         cmp.compare_pre_process_functions(functions)
@@ -49,12 +44,7 @@ class TestAstComparer(TestCase):
 
     def test_local_position_hashes(self):
         fname = '../examples/renamed_local_var_functions.py'
-        with open(fname, 'r') as myfile:
-            data = myfile.read()
-        ast = parse(data, fname, "exec")
-        functions = go_down_tree(ast)
-        for f in functions:
-            f.file = fname
+        functions = AstParser().parse_module(fname)
 
         cmp = AstComparer()
         cmp.compare_pre_process_functions(functions)
@@ -87,12 +77,7 @@ class TestAstComparer(TestCase):
 
     def test_local_var_hashes(self):
         fname = '../examples/renamed_local_var_functions.py'
-        with open(fname, 'r') as myfile:
-            data = myfile.read()
-        ast = parse(data, fname, "exec")
-        functions = go_down_tree(ast)
-        for f in functions:
-            f.file = fname
+        functions = AstParser().parse_module(fname)
 
         cmp = AstComparer()
         cmp.compare_pre_process_functions(functions)
@@ -122,13 +107,7 @@ class TestAstComparer(TestCase):
         self.assertEqual(3, cps[0].count, 'Should include all the 3 lexems')
 
     def find_copypastes_in_file(self, fname: str) -> Tuple[List[Copypaste], AstComparer]:
-        with open(fname, 'r') as myfile:
-            data = myfile.read()
-        ast = parse(data, fname, "exec")
-        functions = go_down_tree(ast)
-        for f in functions:
-            f.file = fname
-
+        functions = AstParser().parse_module(fname)
         cmp = AstComparer()
         cmp.compare_pre_process_functions(functions)
         cps = cmp.find_copypastes(functions)

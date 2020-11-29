@@ -1,5 +1,5 @@
 import hashlib
-from typing import List, Dict, Set, Optional
+from typing import List, Dict, Set, Optional, Tuple
 
 # use original variable names like get_cartesian(bearing, distance)
 VAR_NAMES_ORIGINAL = 'orig'
@@ -60,7 +60,7 @@ class BriefNode:
 
     math_unr_op_symbols = {'USub': '-', 'Not': 'not '}
 
-    def __init__(self, function='', loc=None):
+    def __init__(self, function='', loc: Optional[Tuple[int, int]] = None):
         self.function = function  # type: str
         self.arguments = []  # type: List[BriefNode]
         self.body = {}  # type: Dict[str, List[BriefNode]]
@@ -73,8 +73,8 @@ class BriefNode:
                              VAR_NAMES_INDEX: '',
                              VAR_NAMES_HASH: '' }
         if loc is not None:
-            self.line_start = loc.begin_pos
-            self.line_end = loc.end_pos
+            self.line_start = loc[0]
+            self.line_end = loc[1]
         else:
             self.line_start = 0
             self.line_end = 0
