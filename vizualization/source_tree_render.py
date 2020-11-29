@@ -19,12 +19,20 @@ class SourceTreeRender:
         self.func_by_path: Dict[str, List[FuncTree]] = {}
         self.cps_by_path: Dict[str, List[Copypaste]] = {}
         self.file_parse_errors: Dict[str, str] = {}
+        self.total_files = 0
+        self.files_ok = 0
+        self.files_not_parsed = 0
+        # copypaste filter params
+        self.min_cps_len = 2
+        self.min_cps_weight = 2
 
     def explore_sources(self,
                         source_folders: List[str],
                         output_folder='',
                         ignore_list: List[str] = None,
-                        include_list: List[str] = None):
+                        include_list: List[str] = None,
+                        min_cps_len: int = 2,
+                        min_cps_weight: int = 2):
         if not source_folders:
             raise ValueError('source_folders argument should contain at least one path')
         self.source_folders = source_folders
@@ -41,6 +49,7 @@ class SourceTreeRender:
         if not self.root_folder:
             print(f'No source files / directories are found at {", ".join(source_folders)}')
             return
+        print(f'{self.total_files} files total')
         self.read_functions(self.root_folder)
         self.find_copypastes()
         self.summarize_node_stats()
@@ -82,19 +91,34 @@ class SourceTreeRender:
         cmp = AstComparer()
         cmp.compare_pre_process_functions(self.functions)
         self.copypastes = cmp.find_copypastes(self.functions)
-        print(f'{len(self.copypastes)} copy-pastes are found')
+        old_len = len(self.copypastes)
+        self.copypastes = [c for c in self.copypastes
+                           if c.count >= self.min_cps_len and c.weight >= self.min_cps_weight]
+        print(f'{old_len} copy-pastes are found, {len(self.copypastes)} left after filtering')
 
     def read_functions(self, node: FolderNode) -> None:
         if node.is_file:
             try:
                 functions = AstParser().parse_module(node.full_path)
                 self.functions += functions
+                self.files_ok += 1
+                self.report_file_parsing_progress()
             except Exception as e:
                 print(f'There were error parsing file "{node.full_path}": {e}')
                 self.file_parse_errors[node.full_path] = str(e)
+                self.files_not_parsed += 1
+                self.report_file_parsing_progress()
             return
         for child in node.children:
             self.read_functions(child)
+
+    def report_file_parsing_progress(self):
+        percent_int = int(1000 * (self.files_not_parsed + self.files_ok) / self.total_files)
+        percent = percent_int / 10
+        if self.files_not_parsed:
+            print(f'progress: {percent}%, {self.files_ok} parsed, {self.files_not_parsed} failed')
+        else:
+            print(f'progress: {percent}%, {self.files_ok} parsed')
 
     def read_folder_tree(self, path: str, parent: Optional[FolderNode]) -> None:
         if not self.should_parse(path):
@@ -110,6 +134,8 @@ class SourceTreeRender:
             for file_name in os.listdir(path):
                 sub_path = os.path.join(path, file_name)
                 self.read_folder_tree(sub_path, node)
+        else:
+            self.total_files += 1
 
     def should_parse(self, path: str) -> bool:
         file_name = os.path.basename(path)
