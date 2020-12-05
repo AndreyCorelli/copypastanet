@@ -77,7 +77,8 @@ class FuncTree:
         for i in range(len(node.variables.variables)):
             var = node.variables.variables[i]
             var_hash = node.hash_by_type[VAR_NAMES_INDEX] + str(i)
-            if var.name not in var_hashes:
+            if var.name not in var_hashes \
+                    or var.name not in node.mutating_variables:
                 var_hashes[var.name] = var_hash
             else:
                 var_hashes[var.name] = get_hash(var_hash + var_hashes[var.name])

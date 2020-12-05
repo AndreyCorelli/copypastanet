@@ -10,6 +10,32 @@ def read_file_line_by_line(file_path):
 
 
 class TestAstComparer(TestCase):
+    def test_immutable_variables_equal(self):
+        # 'ct' is immutable in "if ct > 0:" line
+        # so loop bodies should match
+        functions = AstParser().parse_string('''
+def fn1(iters):
+    s = ''
+    a = 1
+    while iters > 0:
+        s += f'{a*a}'
+        a += 1 
+    return s
+
+def fn2(ct):
+    s = ''
+    a = 1
+    if ct > 0:
+        while ct > 0:
+            s += f'{a*a}'
+            a += 1
+        return s            
+            ''', 'file.py')
+        cmp = AstComparer()
+        cmp.compare_pre_process_functions(functions)
+        cps = cmp.find_copypastes(functions)
+        self.assertEqual(1, len(cps))
+
     def test_find_dups_in_parser(self):
         fname = '../examples/lazy_copypaste.py'
         with open(fname, 'r') as myfile:
