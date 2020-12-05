@@ -35,6 +35,8 @@ class SourceTreeRender:
                         min_cps_weight: int = 2):
         if not source_folders:
             raise ValueError('source_folders argument should contain at least one path')
+        self.min_cps_len = min_cps_len
+        self.min_cps_weight = min_cps_weight
         self.source_folders = source_folders
         self.output_folder = output_folder
         self.ignore_list = ignore_list if ignore_list is not None else self.ignore_list

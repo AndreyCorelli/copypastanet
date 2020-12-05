@@ -10,6 +10,9 @@ class TestRenderSources(TestCase):
         src_folder = os.path.join(cur_folder, 'code_folder')
         out_folder = os.path.join(cur_folder, 'rendered_folder')
 
+        #src_folder = '/home/andrey/sources/contraxsuite/lexpredict-contraxsuite-services/contraxsuite_services/apps'
+        #out_folder = '/home/andrey/sources/contraxsuite/contraxsuite_serv_copypaste'
+
         render = HtmlSourceTreeRender()
-        render.explore_sources([src_folder], out_folder)
+        render.explore_sources([src_folder], out_folder, min_cps_len=4)
         render.render()

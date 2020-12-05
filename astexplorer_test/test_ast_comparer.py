@@ -42,6 +42,12 @@ class TestAstComparer(TestCase):
         # different argument naming (x and z)
         self.assertEqual(3, cps[0].count)
 
+    def test_while_loop(self):
+        fname = '../examples/while_loop.py'
+        cps, _ = self.find_copypastes_in_file(fname)
+        # TODO: check inside loop expression
+        self.assertEqual(1, len(cps))
+
     def test_local_position_hashes(self):
         fname = '../examples/renamed_local_var_functions.py'
         functions = AstParser().parse_module(fname)

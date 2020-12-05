@@ -170,8 +170,9 @@ class BriefNode:
             return node.function + ' ' + iter_tg + ' in ' + iter_vl + ':'
 
         if node.function == 'While':
-            test_node = self.stringify(node.body[""][0], var_names_source)
-            return node.function + ' ' + test_node + ':'
+            test_node = self.stringify(node.body['test'][0], var_names_source)
+            body = '\n'.join([self.stringify(a, var_names_source) for a in node.body['_']])
+            return node.function + ' ' + test_node + ':' + body
 
         if node.function == 'With':
             expr = self.stringify(node.body["opt_expr"][0], var_names_source)
