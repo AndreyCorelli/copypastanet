@@ -29,7 +29,7 @@ class TestAstComparer(TestCase):
             print('-' * 80)
             text_a = data[c.start_index_a:c.end_index_a]
             text_b = data[c.node_b.line_start:c.node_b.line_end]
-            print('-------------------------')
+            print('-'*40)
             print(text_a)
             print('\n' + '-' * 80)
             print(text_b)
@@ -47,56 +47,6 @@ class TestAstComparer(TestCase):
         cps, _ = self.find_copypastes_in_file(fname)
         # TODO: check inside loop expression
         self.assertEqual(1, len(cps))
-
-    def test_local_position_hashes(self):
-        fname = '../examples/renamed_local_var_functions.py'
-        functions = AstParser().parse_module(fname)
-
-        cmp = AstComparer()
-        cmp.compare_pre_process_functions(functions)
-        nodes = []
-        hashes_a = []
-        for node in functions[0].children:
-            self.extract_hashes(node, hashes_a, VAR_NAMES_INDEX, nodes)
-        hashes_b = []
-        for node in functions[1].children:
-            self.extract_hashes(node, hashes_b, VAR_NAMES_INDEX, [])
-
-        self.assertEqual(len(hashes_b), len(hashes_a))
-        for i in range(len(hashes_a)):
-            self.assertEqual(hashes_b[i], hashes_a[i],
-                             f'test_local_position_hashes: hashes differ at [{i}].\n'
-                             f'Node: {nodes[i]}')
-
-    def extract_hashes(self,
-                       node: BriefNode,
-                       hashes: List[str],
-                       hash_key: str,
-                       nodes: List[BriefNode]):
-        hashes.append(node.hash_by_type[hash_key])
-        nodes.append(node)
-        for child in node.arguments:
-            self.extract_hashes(child, hashes, hash_key, nodes)
-        for lst_key in node.body:
-            for child in node.body[lst_key]:
-                self.extract_hashes(child, hashes, hash_key, nodes)
-
-    def test_local_var_hashes(self):
-        fname = '../examples/renamed_local_var_functions.py'
-        functions = AstParser().parse_module(fname)
-
-        cmp = AstComparer()
-        cmp.compare_pre_process_functions(functions)
-        hashes_a = {}
-        for node in functions[0].children:
-            hashes_a.update({nm.name: nm.usage_hash for nm in node.variables.variables})
-        hashes_b = {}
-        for node in functions[1].children:
-            hashes_b.update({nm.name: nm.usage_hash for nm in node.variables.variables})
-
-        self.assertEqual(len(hashes_b), len(hashes_a))
-        self.assertEqual(hashes_b['z'], hashes_a['x'], 'x / y')
-        self.assertEqual(hashes_b['d'], hashes_a['y'], 'x / y')
 
     def test_different_local_vars(self):
         fname = '../examples/renamed_local_var_functions.py'

@@ -80,6 +80,11 @@ class BriefNode:
             self.line_end = 0
         # variable local name - variable uniform name
         self.variables = BriefVariableSet()
+        # variables whose values might be changed:
+        # - in assignment operations
+        # - when variable's method is called
+        # - when passed in a function (and the variable is mutable)
+        self.mutating_variables: Set[str] = set()
 
     def __str__(self):
         return self.stringify(self)

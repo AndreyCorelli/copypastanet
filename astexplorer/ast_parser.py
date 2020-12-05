@@ -61,6 +61,9 @@ class AstParser:
     def parse_module(self, file_path: str) -> List[FuncTree]:
         with codecs.open(file_path, 'r', encoding='utf-8') as fr:
             data = fr.read()
+        return self.parse_string(data, file_path)
+
+    def parse_string(self, data: str, file_path: str) -> List[FuncTree]:
         self.line_data = FileLines(data)
         ast = parse(data, file_path, "exec")
         functions = self.go_down_tree(ast)
@@ -323,6 +326,8 @@ class AstParser:
         val_node = BriefNode(node.value.__class__.__name__, loc)
         child.body["_"] = [val_node]
         self.go_down_expression(node.value, val_node)
+        for left_arg in child.arguments:
+            child.mutating_variables.add(left_arg.id)
         return
 
     def go_down_aug_assign_expression(self, node, child):
@@ -339,6 +344,8 @@ class AstParser:
 
         # op
         child.id = node.op.__class__.__name__
+        for left_arg in child.arguments:
+            child.mutating_variables.add(left_arg.id)
 
     def go_down_call_expression(self, node, child):
         # delve into args
@@ -361,6 +368,11 @@ class AstParser:
         if hasattr(node.func, 'value'):
             if hasattr(node.func.value, 'id'):
                 child.instance = node.func.value.id
+
+        # TODO: add only mutable type variables
+        for left_arg in child.arguments:
+            if left_arg.function in {'Name', 'Attribute'}:
+                child.mutating_variables.add(left_arg.id)
 
     def go_down_lambda_expression(self, node, child):
         # args
