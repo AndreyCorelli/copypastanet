@@ -10,8 +10,8 @@ def fn1(iters):
 def fn2(ct):
     s = ''
     a = 1
-    #if ct > 0:
-    while ct > 0:
-        s += f'{a*a}'
-        a += 1
+    if ct > 0:
+        while ct > 0:
+            s += f'{a*a}'
+            a += 1
     return s

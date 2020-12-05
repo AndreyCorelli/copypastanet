@@ -34,7 +34,7 @@ def fn2(ct):
         cmp = AstComparer()
         cmp.compare_pre_process_functions(functions)
         cps = cmp.find_copypastes(functions)
-        self.assertEqual(1, len(cps))
+        self.assertEqual(2, len(cps))
 
     def test_find_dups_in_parser(self):
         fname = '../examples/lazy_copypaste.py'
@@ -72,7 +72,7 @@ def fn2(ct):
         fname = '../examples/while_loop.py'
         cps, _ = self.find_copypastes_in_file(fname)
         # TODO: check inside loop expression
-        self.assertEqual(1, len(cps))
+        self.assertEqual(2, len(cps))
 
     def test_different_local_vars(self):
         fname = '../examples/renamed_local_var_functions.py'

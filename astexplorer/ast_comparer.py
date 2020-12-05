@@ -25,7 +25,7 @@ class AstComparer:
                 fb = functions[j]
                 self.find_func_copypastes(fa, fb)
                 j = j + 1
-        self.sort_copypastes()
+        self.filter_and_sort_copypastes()
         return self.copypastes
 
     def find_func_copypastes(self, fa: FuncTree, fb: FuncTree) -> None:
@@ -61,7 +61,9 @@ class AstComparer:
                     continue
                 self.find_node_copypastes(fa, fb, a.body[""], b_list)
 
-    def sort_copypastes(self):
+    def filter_and_sort_copypastes(self):
+        self.copypastes = list({f'{c.func_a.file}__{c.func_b.file}__{c.start_index_a}_{c.end_index_a}_{c.start_index_a}': c
+                                for c in self.copypastes}.values())
         self.copypastes.sort(key=lambda x: x.count * 100 + x.weight, reverse=True)
 
     def read_src_lines(self, read_file_by_path: Callable[[str], Iterable[str]]) -> str:
