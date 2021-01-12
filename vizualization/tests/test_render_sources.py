@@ -14,5 +14,5 @@ class TestRenderSources(TestCase):
         #out_folder = '/home/andrey/sources/contraxsuite/contraxsuite_serv_copypaste'
 
         render = HtmlSourceTreeRender()
-        render.explore_sources([src_folder], out_folder, min_cps_len=4)
+        render.explore_sources([src_folder], out_folder, min_cps_len=2)
         render.render()

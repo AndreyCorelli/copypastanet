@@ -28,6 +28,39 @@ def compute_none(p):
         self.assertEqual(0, len(children[2].mutating_variables))
         self.assertEqual(0, len(children[5].mutating_variables))
 
+    def test_mutable_vars_if(self):
+        functions = AstParser().parse_string('''
+import math
+def compute_none(p):    
+    if p < 0:
+        print('negative')
+    print(p)
+
+def compute_one(p):    
+    print('?')
+    print(p)    
+    ''', 'file.py')
+        self.assertEqual(2, len(functions))
+        children = functions[0].children
+        self.assertEqual(0, len(children[0].mutating_variables))
+        self.assertEqual({'p'}, children[1].mutating_variables)
+
+        cmp = AstComparer()
+        cmp.compare_pre_process_functions(functions)
+
+        a_vars = {}
+        b_vars = {}
+        all_vars = [a_vars, b_vars]
+        for i in range(2):
+            for c in functions[i].children:
+                for v in c.variables.variables:
+                    if v.name in all_vars[i]:
+                        all_vars[i][v.name].add(v.usage_hash)
+                    else:
+                        all_vars[i][v.name] = {v.usage_hash}
+
+        self.assertEqual(len(a_vars), len(b_vars))
+
     def test_local_position_hashes(self):
         fname = '../examples/renamed_local_var_functions.py'
         functions = AstParser().parse_module(fname)
